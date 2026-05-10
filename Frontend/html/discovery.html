@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discover | Gunpla Hub</title>
+
+  <link rel="stylesheet" href="css/discover.css" />
+</head>
+<body class="discover-body">
+  <header class="discover-header">
+    <div class="discover-logo">
+      <a href="index.html">
+        <span class="logo-red">GUNPLA</span>
+        <span class="logo-white">HUB</span>
+      </a>
+    </div>
+
+    <nav class="discover-nav">
+      <a href="discover.html" class="nav-link active">Discover</a>
+      <a href="store.html" class="nav-link">Store</a>
+      <a href="#" class="nav-link">Events</a>
+      <a href="#" class="nav-link">Receipts</a>
+      <a href="#" class="nav-link">Scan QR</a>
+      <a href="#" class="nav-link">Points</a>
+      <a href="#" class="nav-link">Reward</a>
+    </nav>
+
+    <div class="discover-actions">
+      <div class="role-toggle">
+        <button class="role-btn active" id="buyerBtn">Buyer</button>
+        <button class="role-btn" id="sellerBtn">Seller</button>
+      </div>
+
+      <button class="profile-btn" id="profileBtn" aria-label="Profile">
+        <span>👤</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="discover-main">
+    <section class="discover-search-bar">
+      <input
+        type="text"
+        id="discoverSearch"
+        placeholder="SEARCH"
+        autocomplete="off"
+      />
+    </section>
+
+    <section class="discover-showcase">
+      <button class="arrow-btn left" id="prevBtn" aria-label="Previous card">❮</button>
+
+      <div class="carousel-stage" id="carouselStage"></div>
+
+      <button class="arrow-btn right" id="nextBtn" aria-label="Next card">❯</button>
+    </section>
+
+    <section class="discover-cta">
+      <button class="see-more-btn" id="seeMoreBtn">SEE MORE</button>
+    </section>
+  </main>
+
+  <div class="discover-modal" id="discoverModal">
+    <div class="discover-modal-box">
+      <button class="close-modal" id="closeModal">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="js/discover.js"></script>
+</body>
+</html>

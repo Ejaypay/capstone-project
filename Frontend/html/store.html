@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Store | Gunpla Hub</title>
+
+  <link rel="stylesheet" href="css/store.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <a href="index.html" class="logo">
+      <span>GUNPLA</span> HUB
+    </a>
+
+    <nav class="nav-menu">
+      <a href="discover.html">⌂ Discover</a>
+      <a href="store.html" class="active">▦ Store</a>
+      <a href="#">▣ Events</a>
+      <a href="#">▤ Receipts</a>
+      <a href="#">⌘ Scan QR</a>
+      <a href="#">◉ Points</a>
+      <a href="#">♛ Reward</a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="role-toggle">
+        <button class="role-btn active" id="buyerBtn">Buyer</button>
+        <button class="role-btn" id="sellerBtn">Seller</button>
+      </div>
+
+      <button class="profile-btn" id="profileBtn" aria-label="Profile">●</button>
+    </div>
+  </header>
+
+  <main class="store-page">
+    <section class="store-section">
+      <div class="page-title">
+        <h1>Discover Stores</h1>
+        <p>Find GUNPLA shops across Baguio City</p>
+      </div>
+
+      <div class="filters">
+        <div class="filter-field">
+          <label for="barangayFilter">Barangay</label>
+          <select id="barangayFilter">
+            <option value="all">All</option>
+            <option value="Session Road">Session Road</option>
+            <option value="Bonifacio">Bonifacio</option>
+            <option value="Bakakeng">Bakakeng</option>
+            <option value="Aurora Hill">Aurora Hill</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter">
+            <option value="all">All</option>
+            <option value="HG">HG</option>
+            <option value="RG">RG</option>
+            <option value="MG">MG</option>
+            <option value="PG">PG</option>
+            <option value="Tools">Tools</option>
+            <option value="Paint">Paint</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="line"></div>
+
+      <div class="store-grid" id="storeGrid"></div>
+    </section>
+  </main>
+
+  <div class="modal" id="storeModal">
+    <div class="modal-box">
+      <button class="close-modal" id="closeModal">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="js/store.js"></script>
+</body>
+</html>
