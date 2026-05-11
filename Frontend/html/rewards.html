@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Discover | Gunpla Hub</title>
+  <title>Rewards | Gunpla Hub</title>
 
-  <link rel="stylesheet" href="css/discover.css" />
+  <link rel="stylesheet" href="css/rewards.css" />
 </head>
 
 <body>
@@ -16,13 +16,13 @@
     </a>
 
     <nav class="top-nav">
-      <a href="discover.html" class="active">⌂ Discover</a>
+      <a href="discover.html">⌂ Discover</a>
       <a href="store.html">▦ Store</a>
       <a href="events.html">▣ Events</a>
       <a href="#">▤ Receipts</a>
       <a href="scanqr.html">⌘ Scan QR</a>
       <a href="points.html">◉ Points</a>
-      <a href="#">♛ Reward</a>
+      <a href="rewards.html" class="active">♛ Reward</a>
     </nav>
 
     <div class="top-actions">
@@ -31,35 +31,37 @@
         <button class="role-btn" id="sellerBtn">Seller</button>
       </div>
 
-      <button class="profile-btn" id="profileBtn">●</button>
+      <button class="profile-btn" id="profileBtn" aria-label="Profile">●</button>
     </div>
   </header>
 
-  <main class="discover-page">
-    <div class="search-row">
-      <input type="text" id="discoverSearch" placeholder="SEARCH" />
-    </div>
+  <main class="rewards-page">
+    <section class="rewards-section">
+      <div class="rewards-heading">
+        <div>
+          <h1>Rewards</h1>
+          <p>Redeem your loyalty points for exclusive perks</p>
+        </div>
 
-    <section class="carousel-area">
-      <button class="arrow-btn" id="prevBtn">❮</button>
+        <div class="balance-pill">
+          <span>Available Points</span>
+          <strong id="availablePoints">0</strong>
+        </div>
+      </div>
 
-      <div class="carousel" id="carousel"></div>
+      <div class="divider"></div>
 
-      <button class="arrow-btn" id="nextBtn">❯</button>
+      <div class="rewards-grid" id="rewardsGrid"></div>
     </section>
-
-    <div class="see-more-row">
-      <button id="seeMoreBtn" class="see-more-btn">SEE MORE</button>
-    </div>
   </main>
 
-  <div class="modal" id="discoverModal">
+  <div class="modal" id="rewardModal">
     <div class="modal-box">
       <button class="close-modal" id="closeModal">×</button>
       <div id="modalContent"></div>
     </div>
   </div>
 
-  <script src="js/discover.js"></script>
+  <script src="js/rewards.js"></script>
 </body>
 </html>

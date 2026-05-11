@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Scan QR | Gunpla Hub</title>
+
+  <link rel="stylesheet" href="css/scanqr.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <a href="index.html" class="top-logo">
+      <span>GUNPLA</span> HUB
+    </a>
+
+    <nav class="top-nav">
+      <a href="discover.html">⌂ Discover</a>
+      <a href="store.html">▦ Store</a>
+      <a href="events.html">▣ Events</a>
+      <a href="#">▤ Receipts</a>
+      <a href="scanqr.html" class="active">⌘ Scan QR</a>
+      <a href="points.html">◉ Points</a>
+      <a href="rewards.html">♛ Reward</a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="role-switch">
+        <button class="role-btn active" id="buyerBtn">Buyer</button>
+        <button class="role-btn" id="sellerBtn">Seller</button>
+      </div>
+
+      <button class="profile-btn" id="profileBtn" aria-label="Profile">●</button>
+    </div>
+  </header>
+
+  <main class="scan-page">
+    <section class="scan-section">
+      <div class="scan-heading">
+        <div>
+          <h1>Scan QR Code</h1>
+          <p>Generate a digital receipt QR pattern and simulate earning reward points.</p>
+        </div>
+
+        <button class="scanner-icon" id="scannerIcon" aria-label="Scanner">
+          ⌗
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="scan-layout">
+        <article class="qr-panel">
+          <div class="qr-frame">
+            <canvas id="qrCanvas" width="330" height="330"></canvas>
+            <div class="scan-line"></div>
+          </div>
+
+          <div class="qr-actions">
+            <button class="action-btn red" id="generateQrBtn">Generate QR</button>
+            <button class="action-btn blue" id="scanQrBtn">Scan QR</button>
+            <button class="action-btn dark" id="downloadQrBtn">Download</button>
+          </div>
+        </article>
+
+        <article class="receipt-panel">
+          <h2>Digital Receipt</h2>
+
+          <div class="receipt-info">
+            <div>
+              <span>Receipt ID</span>
+              <strong id="receiptId">GH-000000</strong>
+            </div>
+
+            <div>
+              <span>Store</span>
+              <strong id="storeName">Baguio Gunpla Station</strong>
+            </div>
+
+            <div>
+              <span>Purchase Amount</span>
+              <strong id="purchaseAmount">₱0.00</strong>
+            </div>
+
+            <div>
+              <span>Reward Points</span>
+              <strong id="rewardPoints">0 pts</strong>
+            </div>
+
+            <div>
+              <span>Status</span>
+              <strong id="qrStatus" class="status-pending">Ready to Scan</strong>
+            </div>
+          </div>
+
+          <div class="points-box">
+            <div class="points-header">
+              <span>Points Progress</span>
+              <strong id="pointsPercent">0%</strong>
+            </div>
+
+            <div class="points-meter">
+              <div class="points-fill" id="pointsFill"></div>
+            </div>
+          </div>
+
+          <p class="receipt-note">
+            This is a frontend demo. The QR pattern is generic and randomly generated.
+            Later, your backend can replace this with real receipt QR data.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="scanModal">
+    <div class="modal-box">
+      <button class="close-modal" id="closeModal">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="js/scanqr.js"></script>
+</body>
+</html>

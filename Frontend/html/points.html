@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Points | Gunpla Hub</title>
+
+  <link rel="stylesheet" href="css/points.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <a href="index.html" class="top-logo">
+      <span>GUNPLA</span> HUB
+    </a>
+
+    <nav class="top-nav">
+      <a href="discover.html">⌂ Discover</a>
+      <a href="store.html">▦ Store</a>
+      <a href="events.html">▣ Events</a>
+      <a href="#">▤ Receipts</a>
+      <a href="scanqr.html">⌘ Scan QR</a>
+      <a href="points.html" class="active">◉ Points</a>
+      <a href="rewards.html">♛ Reward</a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="role-switch">
+        <button class="role-btn active" id="buyerBtn">Buyer</button>
+        <button class="role-btn" id="sellerBtn">Seller</button>
+      </div>
+
+      <button class="profile-btn" id="profileBtn" aria-label="Profile">●</button>
+    </div>
+  </header>
+
+  <main class="points-page">
+    <section class="balance-card">
+      <div class="balance-left">
+        <div class="wallet-icon">▣</div>
+
+        <div>
+          <p class="balance-label">Points Balance</p>
+          <h1 id="pointsBalance">0</h1>
+
+          <div class="tier-row">
+            <span class="tier-icon">♕</span>
+            <span id="tierText">Bronze Tier</span>
+            <small id="tierSubtext">0 pts to Silver</small>
+          </div>
+        </div>
+      </div>
+
+      <button class="menu-btn" id="testPurchaseBtn" title="Add test purchase">▦</button>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="tierProgress"></div>
+      </div>
+    </section>
+
+    <section class="history-section">
+      <div class="history-header">
+        <h2>Points History</h2>
+
+        <div class="history-actions">
+          <button id="clearHistoryBtn">Clear Test Data</button>
+          <a href="scanqr.html">Scan QR</a>
+        </div>
+      </div>
+
+      <div class="history-list" id="historyList"></div>
+    </section>
+  </main>
+
+  <div class="modal" id="pointsModal">
+    <div class="modal-box">
+      <button class="close-modal" id="closeModal">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="js/points.js"></script>
+</body>
+</html>
