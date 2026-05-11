@@ -3,66 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Discover | Gunpla Hub</title>
 
   <link rel="stylesheet" href="css/discover.css" />
 </head>
-<body class="discover-body">
-  <header class="discover-header">
-    <div class="discover-logo">
-      <a href="index.html">
-        <span class="logo-red">GUNPLA</span>
-        <span class="logo-white">HUB</span>
-      </a>
-    </div>
 
-    <nav class="discover-nav">
-      <a href="discover.html" class="nav-link active">Discover</a>
-      <a href="store.html" class="nav-link">Store</a>
-      <a href="#" class="nav-link">Events</a>
-      <a href="#" class="nav-link">Receipts</a>
-      <a href="#" class="nav-link">Scan QR</a>
-      <a href="#" class="nav-link">Points</a>
-      <a href="#" class="nav-link">Reward</a>
+<body>
+  <header class="topbar">
+    <a href="index.html" class="top-logo">
+      <span>GUNPLA</span> HUB
+    </a>
+
+    <nav class="top-nav">
+      <a href="discover.html" class="active">⌂ Discover</a>
+      <a href="store.html">▦ Store</a>
+      <a href="#">▣ Events</a>
+      <a href="#">▤ Receipts</a>
+      <a href="#">⌘ Scan QR</a>
+      <a href="#">◉ Points</a>
+      <a href="#">♛ Reward</a>
     </nav>
 
-    <div class="discover-actions">
-      <div class="role-toggle">
+    <div class="top-actions">
+      <div class="role-switch">
         <button class="role-btn active" id="buyerBtn">Buyer</button>
         <button class="role-btn" id="sellerBtn">Seller</button>
       </div>
 
-      <button class="profile-btn" id="profileBtn" aria-label="Profile">
-        <span>👤</span>
-      </button>
+      <button class="profile-btn" id="profileBtn">●</button>
     </div>
   </header>
 
-  <main class="discover-main">
-    <section class="discover-search-bar">
-      <input
-        type="text"
-        id="discoverSearch"
-        placeholder="SEARCH"
-        autocomplete="off"
-      />
+  <main class="discover-page">
+    <div class="search-row">
+      <input type="text" id="discoverSearch" placeholder="SEARCH" />
+    </div>
+
+    <section class="carousel-area">
+      <button class="arrow-btn" id="prevBtn">❮</button>
+
+      <div class="carousel" id="carousel"></div>
+
+      <button class="arrow-btn" id="nextBtn">❯</button>
     </section>
 
-    <section class="discover-showcase">
-      <button class="arrow-btn left" id="prevBtn" aria-label="Previous card">❮</button>
-
-      <div class="carousel-stage" id="carouselStage"></div>
-
-      <button class="arrow-btn right" id="nextBtn" aria-label="Next card">❯</button>
-    </section>
-
-    <section class="discover-cta">
-      <button class="see-more-btn" id="seeMoreBtn">SEE MORE</button>
-    </section>
+    <div class="see-more-row">
+      <button id="seeMoreBtn" class="see-more-btn">SEE MORE</button>
+    </div>
   </main>
 
-  <div class="discover-modal" id="discoverModal">
-    <div class="discover-modal-box">
+  <div class="modal" id="discoverModal">
+    <div class="modal-box">
       <button class="close-modal" id="closeModal">×</button>
       <div id="modalContent"></div>
     </div>

@@ -4,96 +4,154 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Login | Gunpla Hub</title>
+  <title>Gunpla Hub</title>
 
   <link rel="stylesheet" href="css/style.css" />
 </head>
 
-<body class="auth-body">
-  <main class="auth-page">
-    <a class="auth-logo" href="index.html">
-      <span class="logo-red">GUNPLA</span>
-      <span class="logo-white">HUB</span>
+<body>
+  <header class="main-header">
+    <a href="index.html" class="logo">
+      <span>GUNPLA</span> HUB
     </a>
 
-    <section class="auth-shell">
-      <div class="auth-art">
-        <img src="images/mecha-center.svg" alt="Gunpla mecha model" />
+    <nav class="main-nav">
+      <a href="discover.html">Discover</a>
+      <a href="store.html">Store</a>
+      <a href="#rewards">Rewards</a>
+    </nav>
 
-        <div class="auth-art-caption">
-          <h2>HI THERE!</h2>
-          <p>Join us and enjoy rewards.</p>
-        </div>
-      </div>
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-light">Login</a>
+      <a href="login.html?mode=register" class="btn btn-blue">Sign Up</a>
+    </div>
+  </header>
 
-      <div class="auth-panel">
-        <h1 id="authTitle">WELCOME BACK!</h1>
+  <main>
+    <section class="hero">
+      <div class="hero-card">
+        <div class="hero-content">
+          <h1>
+            <span class="yellow">Discover,</span>
+            <span class="red">Build</span><br />
+            and <span class="blue">Earn Rewards</span>
+          </h1>
 
-        <p class="auth-switch-text">
-          <span id="authSubtitle">Don't have an account?</span>
-          <button id="switchAuthMode">Sign Up</button>
-        </p>
+          <p>
+            Connect with Gunpla stores across Baguio City. Scan receipts to earn points,
+            redeem exclusive rewards, and join a thriving community of builders.
+          </p>
 
-        <div class="auth-tabs">
-          <button class="auth-tab" id="registerTab">REGISTRATION</button>
-          <span>/</span>
-          <button class="auth-tab active" id="loginTab">LOGIN</button>
-        </div>
-
-        <form class="auth-form active" id="loginForm">
-          <label for="loginUsername">Username</label>
-          <input id="loginUsername" type="text" required />
-
-          <label for="loginPassword">Password</label>
-          <input id="loginPassword" type="password" required />
-
-          <div class="auth-options">
-            <label class="remember-label">
-              <input type="checkbox" checked />
-              Remember me
-            </label>
-
-            <a href="#">Forgot Password?</a>
+          <div class="hero-buttons">
+            <button class="btn btn-light" data-modal="qr">Get Started</button>
+            <a href="discover.html" class="btn btn-yellow">Discover Stores</a>
           </div>
-
-          <button class="auth-submit" type="submit">LOGIN</button>
-
-          <button class="auth-link-button" type="button" id="openRegisterFromLogin">
-            SIGN UP
-          </button>
-        </form>
-
-        <form class="auth-form" id="registerForm">
-          <label for="registerName">Full Name</label>
-          <input id="registerName" type="text" required />
-
-          <label for="registerUsername">Username</label>
-          <input id="registerUsername" type="text" required />
-
-          <label for="registerEmail">Email</label>
-          <input id="registerEmail" type="email" required />
-
-          <label for="registerPassword">Password</label>
-          <input id="registerPassword" type="password" required />
-
-          <button class="auth-submit" type="submit">CREATE ACCOUNT</button>
-
-          <button class="auth-link-button" type="button" id="openLoginFromRegister">
-            BACK TO LOGIN
-          </button>
-        </form>
-
-        <div class="auth-socials">
-          <button aria-label="Email login">M</button>
-          <button aria-label="Facebook login">f</button>
-          <button aria-label="Instagram login">◎</button>
-          <button aria-label="Google login">G</button>
         </div>
 
-        <p class="auth-message" id="authMessage"></p>
+        <img src="images/mecha-hero.svg" alt="Gunpla mecha" class="hero-mecha" />
+      </div>
+    </section>
+
+    <section class="why-section">
+      <h2>
+        <span class="yellow">Why</span>
+        <span class="blue">Baguio</span>
+        <span class="red">Gunpla?</span>
+      </h2>
+
+      <p class="section-description">
+        We are solving the discovery-only bypass problem by rewarding your loyalty
+        and connecting you directly with local Gunpla stores.
+      </p>
+
+      <div class="feature-layout">
+        <div class="feature-column" id="leftFeatures"></div>
+
+        <div class="center-mecha">
+          <img src="images/mecha-center.svg" alt="Center mecha" />
+        </div>
+
+        <div class="feature-column" id="rightFeatures"></div>
+      </div>
+    </section>
+
+    <section class="reward-section" id="rewards">
+      <h2>Start Earning Rewards Today</h2>
+
+      <div class="steps-grid">
+        <article class="step-card">
+          <div class="step-number orange">1</div>
+          <h3>Shop at Partner Stores</h3>
+          <p>Purchase Gunpla kits, tools, or paints from any participating store in Baguio City.</p>
+        </article>
+
+        <article class="step-card">
+          <div class="step-number blue-bg">2</div>
+          <h3>Scan QR Code</h3>
+          <p>Scan the QR code on your digital receipt to instantly earn loyalty points.</p>
+        </article>
+
+        <article class="step-card">
+          <div class="step-number red-bg">3</div>
+          <h3>Redeem Rewards</h3>
+          <p>Use your points to get vouchers, discounts, and exclusive freebies.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <h2>Ready to Start Building?</h2>
+      <p>Join Baguio Gunpla Hub today and start earning rewards on every purchase.</p>
+
+      <div class="cta-actions">
+        <a href="login.html?mode=register" class="btn btn-light">Create Free Account</a>
+        <a href="login.html" class="btn btn-outline">Login</a>
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">
+          <span>GUNPLA</span> HUB
+        </div>
+        <p>Connecting Gunpla enthusiasts with local stores in Baguio City.</p>
+      </div>
+
+      <div>
+        <h4>For Buyers</h4>
+        <a href="store.html">Find Stores</a>
+        <a href="#">Events</a>
+        <a href="#rewards">Rewards</a>
+      </div>
+
+      <div>
+        <h4>For Sellers</h4>
+        <a href="#">Dashboard</a>
+        <a href="#">Analytics</a>
+        <a href="#">Loyalty Program</a>
+      </div>
+
+      <div>
+        <h4>About</h4>
+        <a href="#">About Us</a>
+        <a href="#">Contact</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © 2026 Baguio Gunpla Hub. Capstone Project.
+    </div>
+  </footer>
+
+  <div class="modal" id="mainModal">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
 
   <script src="js/app.js"></script>
 </body>

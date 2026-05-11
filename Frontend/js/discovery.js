@@ -1,25 +1,21 @@
-const discoverItems = [
+const items = [
   {
     id: 1,
     name: "Crimson Strike",
     grade: "MG",
-    store: "Mecha Corner Baguio",
+    store: "Baguio Gunpla Station",
     points: 120,
-    description:
-      "A premium Master Grade-style kit with bold red armor details, heavy weapon styling, and strong shelf presence.",
     image: "images/mecha-hero.svg",
-    bgClass: "bg-one"
+    description: "A powerful red-accented build with heavy weapon styling and strong display presence."
   },
   {
     id: 2,
     name: "Royal White Frame",
     grade: "HG",
-    store: "Plastic Model Base",
+    store: "Mecha Corner Baguio",
     points: 95,
-    description:
-      "Elegant white-and-blue frame inspired styling, perfect for collectors who want a clean heroic centerpiece build.",
     image: "images/mecha-center.svg",
-    bgClass: "bg-two"
+    description: "A clean white-and-blue frame perfect for builders who want a heroic centerpiece."
   },
   {
     id: 3,
@@ -27,10 +23,8 @@ const discoverItems = [
     grade: "RG",
     store: "Runner Gate Hobby",
     points: 150,
-    description:
-      "Compact real-grade inspired design with neutral armor, balanced articulation, and strong detail density.",
     image: "images/mecha-hero.svg",
-    bgClass: "bg-three"
+    description: "A compact real-grade inspired kit with sharp details and dynamic posing."
   },
   {
     id: 4,
@@ -38,28 +32,15 @@ const discoverItems = [
     grade: "HG",
     store: "North Build Station",
     points: 80,
-    description:
-      "Lightweight build style with clean blue panels, solid beginner-friendly construction, and dynamic posing options.",
     image: "images/mecha-center.svg",
-    bgClass: "bg-two"
-  },
-  {
-    id: 5,
-    name: "Iron Sentinel",
-    grade: "MG",
-    store: "Red Frame Collectibles",
-    points: 160,
-    description:
-      "A bulkier armored unit with sturdy proportions and a commanding silhouette suited for advanced builders.",
-    image: "images/mecha-hero.svg",
-    bgClass: "bg-one"
+    description: "A beginner-friendly build with clean blue armor and flexible display options."
   }
 ];
 
-let filteredItems = [...discoverItems];
-let currentCenterIndex = 1;
+let filteredItems = [...items];
+let currentIndex = 1;
 
-const carouselStage = document.getElementById("carouselStage");
+const carousel = document.getElementById("carousel");
 const searchInput = document.getElementById("discoverSearch");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
@@ -71,126 +52,79 @@ const buyerBtn = document.getElementById("buyerBtn");
 const sellerBtn = document.getElementById("sellerBtn");
 const profileBtn = document.getElementById("profileBtn");
 
-function clampCenterIndex() {
+function normalizeIndex() {
   if (filteredItems.length === 0) {
-    currentCenterIndex = 0;
+    currentIndex = 0;
     return;
   }
 
-  if (currentCenterIndex < 0) {
-    currentCenterIndex = filteredItems.length - 1;
+  if (currentIndex < 0) {
+    currentIndex = filteredItems.length - 1;
   }
 
-  if (currentCenterIndex >= filteredItems.length) {
-    currentCenterIndex = 0;
+  if (currentIndex >= filteredItems.length) {
+    currentIndex = 0;
   }
 }
 
 function getVisibleItems() {
-  if (filteredItems.length === 0) {
-    return [];
-  }
-
-  if (window.innerWidth <= 700) {
-    return filteredItems.map((item, index) => ({
-      ...item,
-      positionClass: index === currentCenterIndex ? "center" : "side",
-      realIndex: index
-    }));
-  }
+  if (filteredItems.length === 0) return [];
 
   if (filteredItems.length === 1) {
-    return [
-      {
-        ...filteredItems[0],
-        positionClass: "center",
-        realIndex: 0
-      }
-    ];
+    return [{ ...filteredItems[0], index: 0, position: "center" }];
   }
 
   if (filteredItems.length === 2) {
-    return [
-      {
-        ...filteredItems[0],
-        positionClass: currentCenterIndex === 0 ? "center" : "side",
-        realIndex: 0
-      },
-      {
-        ...filteredItems[1],
-        positionClass: currentCenterIndex === 1 ? "center" : "side",
-        realIndex: 1
-      }
-    ];
+    return filteredItems.map((item, index) => ({
+      ...item,
+      index,
+      position: index === currentIndex ? "center" : "side"
+    }));
   }
 
-  const leftIndex =
-    (currentCenterIndex - 1 + filteredItems.length) % filteredItems.length;
-  const rightIndex =
-    (currentCenterIndex + 1) % filteredItems.length;
+  const left = (currentIndex - 1 + filteredItems.length) % filteredItems.length;
+  const right = (currentIndex + 1) % filteredItems.length;
 
   return [
-    {
-      ...filteredItems[leftIndex],
-      positionClass: "side",
-      realIndex: leftIndex
-    },
-    {
-      ...filteredItems[currentCenterIndex],
-      positionClass: "center",
-      realIndex: currentCenterIndex
-    },
-    {
-      ...filteredItems[rightIndex],
-      positionClass: "side",
-      realIndex: rightIndex
-    }
+    { ...filteredItems[left], index: left, position: "side" },
+    { ...filteredItems[currentIndex], index: currentIndex, position: "center" },
+    { ...filteredItems[right], index: right, position: "side" }
   ];
 }
 
 function renderCarousel() {
-  if (!carouselStage) return;
+  normalizeIndex();
 
-  clampCenterIndex();
-  const visibleItems = getVisibleItems();
+  const visible = getVisibleItems();
 
-  if (filteredItems.length === 0) {
-    carouselStage.innerHTML = `
+  if (visible.length === 0) {
+    carousel.innerHTML = `
       <div class="empty-state">
-        <h3>No kits found</h3>
-        <p>Try a different search keyword.</p>
+        <h2>No kits found</h2>
+        <p>Try searching another keyword.</p>
       </div>
     `;
     return;
   }
 
-  carouselStage.innerHTML = visibleItems
-    .map((item) => {
-      return `
-        <article
-          class="discovery-card ${item.positionClass} ${item.bgClass}"
-          data-index="${item.realIndex}"
-        >
-          <div class="discovery-card-inner">
-            <div class="discovery-card-bg"></div>
-            <div class="shop-badge">🛒</div>
-            <img src="${item.image}" alt="${item.name}" />
-            <div class="card-info">
-              <h3>${item.name}</h3>
-              <p>${item.grade} • ${item.store}</p>
-            </div>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
+  carousel.innerHTML = visible.map((item) => `
+    <article class="discovery-card ${item.position}" data-index="${item.index}">
+      <div class="discovery-card-inner">
+        <div class="shop-badge">🛒</div>
+        <img src="${item.image}" alt="${item.name}" />
+        <div class="card-info">
+          <h3>${item.name}</h3>
+          <p>${item.grade} • ${item.store}</p>
+        </div>
+      </div>
+    </article>
+  `).join("");
 
   document.querySelectorAll(".discovery-card").forEach((card) => {
     card.addEventListener("click", () => {
-      const index = Number(card.dataset.index);
-      currentCenterIndex = index;
+      currentIndex = Number(card.dataset.index);
       renderCarousel();
-      openItemModal(filteredItems[currentCenterIndex]);
+      openModal(filteredItems[currentIndex]);
     });
   });
 }
@@ -198,7 +132,7 @@ function renderCarousel() {
 function applySearch() {
   const query = searchInput.value.trim().toLowerCase();
 
-  filteredItems = discoverItems.filter((item) => {
+  filteredItems = items.filter((item) => {
     return (
       item.name.toLowerCase().includes(query) ||
       item.grade.toLowerCase().includes(query) ||
@@ -206,43 +140,21 @@ function applySearch() {
     );
   });
 
-  currentCenterIndex = filteredItems.length > 1 ? 1 : 0;
+  currentIndex = filteredItems.length > 1 ? 1 : 0;
   renderCarousel();
 }
 
-function showPrevious() {
-  if (filteredItems.length === 0) return;
-  currentCenterIndex -= 1;
-  clampCenterIndex();
-  renderCarousel();
-}
-
-function showNext() {
-  if (filteredItems.length === 0) return;
-  currentCenterIndex += 1;
-  clampCenterIndex();
-  renderCarousel();
-}
-
-function getCurrentItem() {
-  if (filteredItems.length === 0) return null;
-  clampCenterIndex();
-  return filteredItems[currentCenterIndex];
-}
-
-function openItemModal(item) {
-  if (!item || !modal || !modalContent) return;
+function openModal(item) {
+  if (!item) return;
 
   modalContent.innerHTML = `
     <div class="modal-layout">
-      <div class="modal-image-wrap">
-        <img src="${item.image}" alt="${item.name}">
-      </div>
+      <img src="${item.image}" alt="${item.name}" />
 
       <div class="modal-details">
         <h2>${item.name}</h2>
 
-        <div class="modal-meta">
+        <div class="modal-tags">
           <span class="modal-tag">Grade: ${item.grade}</span>
           <span class="modal-tag">Store: ${item.store}</span>
           <span class="modal-tag">Points: ${item.points}</span>
@@ -250,10 +162,7 @@ function openItemModal(item) {
 
         <p>${item.description}</p>
 
-        <div class="modal-actions">
-          <button class="modal-btn primary" id="requestBtn">Request Kit</button>
-          <button class="modal-btn secondary" id="saveBtn">Save Item</button>
-        </div>
+        <button class="modal-btn red" id="requestBtn">Request Kit</button>
       </div>
     </div>
   `;
@@ -264,78 +173,55 @@ function openItemModal(item) {
     modalContent.innerHTML = `
       <div class="modal-details">
         <h2>Request Sent</h2>
-        <p>Your request for <strong>${item.name}</strong> has been submitted to <strong>${item.store}</strong>.</p>
-        <div class="modal-actions">
-          <button class="modal-btn secondary" id="closeSuccessBtn">Close</button>
-        </div>
+        <p>Your request for <strong>${item.name}</strong> was sent to <strong>${item.store}</strong>.</p>
+        <button class="modal-btn" id="doneBtn">Done</button>
       </div>
     `;
 
-    document.getElementById("closeSuccessBtn").addEventListener("click", closeItemModal);
-  });
-
-  document.getElementById("saveBtn").addEventListener("click", () => {
-    modalContent.innerHTML = `
-      <div class="modal-details">
-        <h2>Saved</h2>
-        <p><strong>${item.name}</strong> has been added to your saved items.</p>
-        <div class="modal-actions">
-          <button class="modal-btn secondary" id="closeSavedBtn">Close</button>
-        </div>
-      </div>
-    `;
-
-    document.getElementById("closeSavedBtn").addEventListener("click", closeItemModal);
+    document.getElementById("doneBtn").addEventListener("click", closeItemModal);
   });
 }
 
 function closeItemModal() {
-  if (!modal) return;
   modal.classList.remove("active");
 }
 
-function toggleRole(selectedRole) {
-  if (selectedRole === "buyer") {
-    buyerBtn.classList.add("active");
-    sellerBtn.classList.remove("active");
-  } else {
-    sellerBtn.classList.add("active");
-    buyerBtn.classList.remove("active");
-  }
+function toggleRole(role) {
+  const buyerSelected = role === "buyer";
+
+  buyerBtn.classList.toggle("active", buyerSelected);
+  sellerBtn.classList.toggle("active", !buyerSelected);
 }
 
-function initializeEvents() {
-  searchInput.addEventListener("input", applySearch);
-  prevBtn.addEventListener("click", showPrevious);
-  nextBtn.addEventListener("click", showNext);
-
-  seeMoreBtn.addEventListener("click", () => {
-    const item = getCurrentItem();
-    openItemModal(item);
-  });
-
-  closeModal.addEventListener("click", closeItemModal);
-
-  modal.addEventListener("click", (event) => {
-    if (event.target === modal) {
-      closeItemModal();
-    }
-  });
-
-  buyerBtn.addEventListener("click", () => toggleRole("buyer"));
-  sellerBtn.addEventListener("click", () => toggleRole("seller"));
-
-  profileBtn.addEventListener("click", () => {
-    alert("Profile page coming soon.");
-  });
-
-  window.addEventListener("resize", renderCarousel);
-}
-
-function initDiscoverPage() {
-  currentCenterIndex = filteredItems.length > 1 ? 1 : 0;
+prevBtn.addEventListener("click", () => {
+  currentIndex--;
   renderCarousel();
-  initializeEvents();
-}
+});
 
-initDiscoverPage();
+nextBtn.addEventListener("click", () => {
+  currentIndex++;
+  renderCarousel();
+});
+
+searchInput.addEventListener("input", applySearch);
+
+seeMoreBtn.addEventListener("click", () => {
+  openModal(filteredItems[currentIndex]);
+});
+
+closeModal.addEventListener("click", closeItemModal);
+
+modal.addEventListener("click", (event) => {
+  if (event.target === modal) {
+    closeItemModal();
+  }
+});
+
+buyerBtn.addEventListener("click", () => toggleRole("buyer"));
+sellerBtn.addEventListener("click", () => toggleRole("seller"));
+
+profileBtn.addEventListener("click", () => {
+  alert("Profile page coming soon.");
+});
+
+renderCarousel();

@@ -11,11 +11,11 @@
 
 <body>
   <header class="topbar">
-    <a href="index.html" class="logo">
+    <a href="index.html" class="top-logo">
       <span>GUNPLA</span> HUB
     </a>
 
-    <nav class="nav-menu">
+    <nav class="top-nav">
       <a href="discover.html">⌂ Discover</a>
       <a href="store.html" class="active">▦ Store</a>
       <a href="#">▣ Events</a>
@@ -26,24 +26,22 @@
     </nav>
 
     <div class="top-actions">
-      <div class="role-toggle">
+      <div class="role-switch">
         <button class="role-btn active" id="buyerBtn">Buyer</button>
         <button class="role-btn" id="sellerBtn">Seller</button>
       </div>
 
-      <button class="profile-btn" id="profileBtn" aria-label="Profile">●</button>
+      <button class="profile-btn" id="profileBtn">●</button>
     </div>
   </header>
 
   <main class="store-page">
     <section class="store-section">
-      <div class="page-title">
-        <h1>Discover Stores</h1>
-        <p>Find GUNPLA shops across Baguio City</p>
-      </div>
+      <h1>Discover Stores</h1>
+      <p class="store-subtitle">Find GUNPLA shops across Baguio City</p>
 
       <div class="filters">
-        <div class="filter-field">
+        <div>
           <label for="barangayFilter">Barangay</label>
           <select id="barangayFilter">
             <option value="all">All</option>
@@ -54,7 +52,7 @@
           </select>
         </div>
 
-        <div class="filter-field">
+        <div>
           <label for="categoryFilter">Category</label>
           <select id="categoryFilter">
             <option value="all">All</option>
@@ -68,7 +66,7 @@
         </div>
       </div>
 
-      <div class="line"></div>
+      <div class="divider"></div>
 
       <div class="store-grid" id="storeGrid"></div>
     </section>
