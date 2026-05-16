@@ -3,64 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta name="description" content="Gunpla Hub connects Baguio Gunpla builders with local hobby stores, product availability, QR receipts, rewards, and seller analytics." />
   <title>Events | Gunpla Hub</title>
-
-  <link rel="stylesheet" href="css/events.css" />
+  <link rel="stylesheet" href="../css/app.css" />
 </head>
-
-<body>
-  <header class="topbar">
-    <a href="index.html" class="top-logo">
-      <span>GUNPLA</span> HUB
-    </a>
-
-    <nav class="top-nav">
-      <a href="discover.html">⌂ Discover</a>
-      <a href="store.html">▦ Store</a>
-      <a href="events.html" class="active">▣ Events</a>
-      <a href="#">▤ Receipts</a>
-      <a href="scanqr.html">⌘ Scan QR</a>
-      <a href="points.html">◉ Points</a>
-      <a href="rewards.html">♛ Reward</a>
-    </nav>
-
-    <div class="top-actions">
-      <div class="role-switch">
-        <button class="role-btn active" id="buyerBtn">Buyer</button>
-        <button class="role-btn" id="sellerBtn">Seller</button>
-      </div>
-
-      <button class="profile-btn" id="profileBtn" aria-label="Profile">●</button>
-    </div>
-  </header>
-
-  <main class="events-page">
-    <section class="events-section">
-      <div class="events-heading-row">
-        <div>
-          <h1>Upcoming Events</h1>
-          <p>Build nights, workshops and competitions in Baguio</p>
-        </div>
-
-        <button class="calendar-btn" id="calendarBtn" aria-label="Open calendar">
-          📅
-        </button>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="events-list" id="eventsList"></div>
-    </section>
-  </main>
-
-  <div class="modal" id="eventModal">
-    <div class="modal-box">
-      <button class="close-modal" id="closeModal">×</button>
-      <div id="modalContent"></div>
-    </div>
-  </div>
-
-  <script src="js/events.js"></script>
+<body data-page="events">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <div class="ambient-bg" aria-hidden="true"></div>
+  <div id="app"></div>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
 </body>
 </html>

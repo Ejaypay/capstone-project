@@ -3,65 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta name="description" content="Gunpla Hub connects Baguio Gunpla builders with local hobby stores, product availability, QR receipts, rewards, and seller analytics." />
   <title>Rewards | Gunpla Hub</title>
-
-  <link rel="stylesheet" href="css/rewards.css" />
+  <link rel="stylesheet" href="../css/app.css" />
 </head>
-
-<body>
-  <header class="topbar">
-    <a href="index.html" class="top-logo">
-      <span>GUNPLA</span> HUB
-    </a>
-
-    <nav class="top-nav">
-      <a href="discover.html">⌂ Discover</a>
-      <a href="store.html">▦ Store</a>
-      <a href="events.html">▣ Events</a>
-      <a href="#">▤ Receipts</a>
-      <a href="scanqr.html">⌘ Scan QR</a>
-      <a href="points.html">◉ Points</a>
-      <a href="rewards.html" class="active">♛ Reward</a>
-    </nav>
-
-    <div class="top-actions">
-      <div class="role-switch">
-        <button class="role-btn active" id="buyerBtn">Buyer</button>
-        <button class="role-btn" id="sellerBtn">Seller</button>
-      </div>
-
-      <button class="profile-btn" id="profileBtn" aria-label="Profile">●</button>
-    </div>
-  </header>
-
-  <main class="rewards-page">
-    <section class="rewards-section">
-      <div class="rewards-heading">
-        <div>
-          <h1>Rewards</h1>
-          <p>Redeem your loyalty points for exclusive perks</p>
-        </div>
-
-        <div class="balance-pill">
-          <span>Available Points</span>
-          <strong id="availablePoints">0</strong>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="rewards-grid" id="rewardsGrid"></div>
-    </section>
-  </main>
-
-  <div class="modal" id="rewardModal">
-    <div class="modal-box">
-      <button class="close-modal" id="closeModal">×</button>
-      <div id="modalContent"></div>
-    </div>
-  </div>
-
-  <script src="js/rewards.js"></script>
+<body data-page="rewards">
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+  <div class="ambient-bg" aria-hidden="true"></div>
+  <div id="app"></div>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
 </body>
 </html>
