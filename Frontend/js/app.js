@@ -10,7 +10,9 @@
     transactions: "gunpla.transactions.v1",
     redemptions: "gunpla.redemptions.v1",
     rsvps: "gunpla.rsvps.v1",
-    account: "gunpla.account.v1"
+    account: "gunpla.account.v1",
+    inventory: "gunpla.inventory.v1",
+    reservations: "gunpla.reservations.v1"
   };
 
   const read = (key, fallback) => {
@@ -101,23 +103,114 @@
     return `<section class="page-head"><p class="kicker">${kicker}</p><h1>${title}</h1><p>${text}</p></section>`;
   }
 
+  function getInventoryOverrides() {
+    return read(keys.inventory, {});
+  }
+
+  function getProductStock(product) {
+    const overrides = getInventoryOverrides();
+    return Number(overrides[product.id]?.stock ?? product.stock);
+  }
+
+  function getProductStatus(product) {
+    const overrides = getInventoryOverrides();
+    const manualStatus = overrides[product.id]?.status;
+    const stock = getProductStock(product);
+
+    if (manualStatus) return manualStatus;
+    if (stock <= 0) return product.status === "Pre-order" ? "Pre-order" : "Out of Stock";
+    if (stock <= 5) return "Low Stock";
+    if (product.status === "Restock Soon") return "Restock Soon";
+    return product.status === "Pre-order" ? "Pre-order" : "Available";
+  }
+
+  function setProductInventory(productId, stock, status = "") {
+    const overrides = getInventoryOverrides();
+
+    overrides[productId] = {
+      ...(overrides[productId] || {}),
+      stock: Math.max(0, Number(stock) || 0)
+    };
+
+    if (status) {
+      overrides[productId].status = status;
+    } else {
+      delete overrides[productId].status;
+    }
+
+    write(keys.inventory, overrides);
+  }
+
+  function getSellerReservations() {
+    const saved = read(keys.reservations, null);
+    if (saved) return saved;
+
+    return getReceipts().slice(0, 4).map((receipt, index) => ({
+      id: `RSV-DEMO-${index + 1}`,
+      receiptId: receipt.id,
+      productId: DATA.products[index % DATA.products.length].id,
+      productName: receipt.items.split(",")[0],
+      store: receipt.store,
+      customer: ["Jared Dela Cruz", "Alex Builder", "Mika Runner", "Demo Buyer"][index % 4],
+      status: index === 2 ? "Pre-order" : "For Pickup",
+      amount: receipt.amount,
+      date: receipt.date
+    }));
+  }
+
+  function createReservationRecord(product, receipt) {
+    const store = DATA.stores.find((item) => item.id === product.storeId);
+    const reservations = read(keys.reservations, []);
+
+    reservations.unshift({
+      id: `RSV-${receipt.id.replace("GH-", "")}`,
+      receiptId: receipt.id,
+      productId: product.id,
+      productName: product.name,
+      store: store?.name || receipt.store,
+      customer: "Demo Builder",
+      status: getProductStatus(product) === "Pre-order" ? "Pre-order" : "For Pickup",
+      amount: receipt.amount,
+      date: receipt.date
+    });
+
+    write(keys.reservations, reservations);
+  }
+
   function statusClass(status) {
     if (status === "Available") return "green";
-    if (status === "Pre-order") return "yellow";
+    if (status === "Pre-order" || status === "Low Stock" || status === "Restock Soon") return "yellow";
     return "red";
   }
 
   function productCard(product) {
     const store = DATA.stores.find((item) => item.id === product.storeId);
+    const stock = getProductStock(product);
+    const status = getProductStatus(product);
+
     return `
       <article class="product-card">
-        <div class="product-art"><img src="${product.image}" alt="${product.name}"></div>
+        <div class="product-art">
+          <img src="${product.image}" alt="${product.name}">
+        </div>
+
         <div class="product-body">
-          <div class="card-row"><span class="pill ${statusClass(product.status)}">${product.status}</span><span class="pill">${product.grade}</span></div>
+          <div class="card-row">
+            <span class="pill ${statusClass(status)}">${status}</span>
+            <span class="pill">${product.grade}</span>
+          </div>
+
           <h3>${product.name}</h3>
           <p>${product.description}</p>
-          <div class="card-row"><strong>${money(product.price)}</strong><small>${store?.name || "Local store"}</small></div>
-          <button class="primary-btn reserve-btn" data-id="${product.id}">Reserve Kit</button>
+
+          <div class="card-row">
+            <strong>${money(product.price)}</strong>
+            <small>${store?.name || "Local store"} · ${stock} left</small>
+          </div>
+
+          <button class="primary-btn reserve-btn" data-id="${product.id}" ${status === "Out of Stock" ? "disabled" : ""}>
+            ${status === "Pre-order" ? "Pre-order Kit" : "Reserve Kit"}
+          </button>
         </div>
       </article>
     `;
@@ -155,10 +248,22 @@
       items: product.name,
       date: new Date().toISOString().slice(0, 10)
     };
-    const receipts = getReceipts();
+       const receipts = getReceipts();
     receipts.unshift(receipt);
     write(keys.receipts, receipts);
-    openModal(`<h2>Reservation created</h2><p>Your digital receipt <b>${receipt.id}</b> is ready. You may claim ${receipt.points} points from the Receipts page.</p><a class="primary-btn" href="receipts.html">Open receipts</a>`);
+
+    createReservationRecord(product, receipt);
+
+    const currentStock = getProductStock(product);
+    if (currentStock > 0 && getProductStatus(product) !== "Pre-order") {
+      setProductInventory(product.id, currentStock - 1);
+    }
+
+       openModal(`
+      <h2>Reservation created</h2>
+      <p>Your digital receipt <b>${receipt.id}</b> is ready. You may claim ${receipt.points} points from the Receipts page.</p>
+      <a class="primary-btn" href="receipts.html">Open receipts</a>
+    `);
   }
 
   function bindReserveButtons() {
@@ -326,11 +431,406 @@
     }));
   }
 
-  function renderSeller() {
+   function renderSeller() {
     const receipts = getReceipts();
+    const transactions = getTransactions();
+    const redemptions = getRedemptions();
+    const reservations = getSellerReservations();
+
+    const products = DATA.products.map((product) => ({
+      ...product,
+      liveStock: getProductStock(product),
+      liveStatus: getProductStatus(product),
+      soldCount: receipts.filter((receipt) =>
+        receipt.items.toLowerCase().includes(product.name.toLowerCase())
+      ).length
+    }));
+
     const sales = receipts.reduce((sum, receipt) => sum + Number(receipt.amount), 0);
-    const lowStock = DATA.products.filter((product) => product.stock <= 5).length;
-    shell(`${titleBlock("Seller dashboard", "Analytics for smarter restocking", "A sustainable seller view focused on demand, inventory, and useful customer signals.")}<section class="metric-grid"><article><span>Total sales</span><b>${money(sales)}</b></article><article><span>Receipts</span><b>${receipts.length}</b></article><article><span>Low stock kits</span><b>${lowStock}</b></article><article><span>Point claims</span><b>${getTransactions().length}</b></article></section><section class="analytics-grid"><article class="info-card dark"><h3>Inventory movement</h3>${DATA.products.map((product) => `<div class="bar-row"><span>${product.name}</span><div><i style="width:${Math.min(100, product.stock * 5)}%"></i></div><small>${product.stock} left</small></div>`).join("")}</article><article class="info-card dark"><h3>Sustainable actions</h3><p>Prioritize restocking kits with repeated reservations, avoid duplicate slow-moving stock, and use preorder labels for demand testing.</p><ul><li>Use stock status before reordering.</li><li>Promote beginner kits when event signups rise.</li><li>Bundle tools with high-demand HG kits.</li></ul></article></section>`);
+    const lowStockProducts = products.filter((product) => product.liveStock <= 5);
+    const activeReservations = reservations.filter((item) => item.status !== "Completed");
+
+    const pointLiability = Math.max(
+      0,
+      transactions.reduce((sum, item) => sum + Number(item.points || 0), 0) -
+      redemptions.reduce((sum, item) => sum + Number(item.cost || 0), 0)
+    );
+
+    const claimRate = receipts.length ? Math.round((transactions.length / receipts.length) * 100) : 0;
+
+    const salesByDate = receipts.reduce((map, receipt) => {
+      map[receipt.date] = (map[receipt.date] || 0) + Number(receipt.amount);
+      return map;
+    }, {});
+
+    const salesRows = Object.entries(salesByDate)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-6);
+
+    const maxSales = Math.max(1, ...salesRows.map(([, value]) => value));
+
+    const demandRows = products.map((product) => {
+      const receiptHits = receipts.filter((receipt) =>
+        receipt.items.toLowerCase().includes(product.name.toLowerCase()) ||
+        receipt.items.toLowerCase().includes(product.grade.toLowerCase())
+      ).length;
+
+      const reservationHits = reservations.filter((item) =>
+        item.productId === product.id ||
+        item.productName.toLowerCase().includes(product.name.toLowerCase())
+      ).length;
+
+      const lowStockBoost = product.liveStock <= 5 ? 18 : 0;
+      const preorderBoost = product.liveStatus === "Pre-order" ? 14 : 0;
+
+      return {
+        ...product,
+        demandScore: receiptHits * 16 + reservationHits * 20 + lowStockBoost + preorderBoost
+      };
+    }).sort((a, b) => b.demandScore - a.demandScore);
+
+    const topProduct = demandRows[0];
+
+    const restockEstimate = lowStockProducts.reduce((sum, product) => {
+      return sum + Math.max(0, 12 - product.liveStock) * product.price;
+    }, 0);
+
+    const stockHealth = Math.max(
+      0,
+      Math.round(((products.length - lowStockProducts.length) / products.length) * 100)
+    );
+
+    const gradeDemand = ["EG", "HG", "RG", "MG"].map((grade) => {
+      const value =
+        receipts.filter((receipt) => receipt.items.toLowerCase().includes(grade.toLowerCase())).length +
+        products.filter((product) => product.grade === grade && product.liveStock <= 5).length;
+
+      return { grade, value };
+    });
+
+    const maxGradeDemand = Math.max(1, ...gradeDemand.map((item) => item.value));
+
+    const actionFor = (product) => {
+      if (product.liveStock === 0) return "Move to pre-order or restock now";
+      if (product.liveStock <= 3) return "Urgent restock needed";
+      if (product.liveStock <= 5) return "Monitor and prepare reorder";
+      if (product.soldCount === 0 && product.liveStock >= 12) return "Promote or bundle with tools";
+      return "Stock level is healthy";
+    };
+
+    shell(`
+      ${titleBlock(
+        "Seller analytics",
+        "Data analytics for sales and inventory",
+        "A store-owner page for the capstone emerging technology: analytics that converts receipts, reservations, stock movement, QR claims, rewards, and buyer behavior into restocking decisions."
+      )}
+
+      <section class="seller-command">
+        <div>
+          <p class="kicker">Emerging technology</p>
+          <h2>Evidence-based seller control center</h2>
+          <p>
+            This dashboard follows the manuscript goal: use data analytics to monitor sales performance,
+            identify best-selling products, evaluate demand trends, and support inventory decisions.
+          </p>
+        </div>
+
+        <div class="seller-actions">
+          <button class="primary-btn" id="sellerAddSale">Simulate sale + QR receipt</button>
+          <button class="ghost-btn" id="sellerResetInventory">Reset stock demo</button>
+        </div>
+      </section>
+
+      <section class="metric-grid seller-metric-grid">
+        <article>
+          <span>Total sales</span>
+          <b>${money(sales)}</b>
+          <small>${receipts.length} digital receipts</small>
+        </article>
+
+        <article>
+          <span>Active reservations</span>
+          <b>${activeReservations.length}</b>
+          <small>Reservation and pre-order queue</small>
+        </article>
+
+        <article>
+          <span>Stock health</span>
+          <b>${stockHealth}%</b>
+          <small>${lowStockProducts.length} low-stock kits</small>
+        </article>
+
+        <article>
+          <span>QR claim rate</span>
+          <b>${claimRate}%</b>
+          <small>${pointLiability.toLocaleString()} points liability</small>
+        </article>
+
+        <article>
+          <span>Top demand signal</span>
+          <b>${topProduct?.grade || "--"}</b>
+          <small>${topProduct?.name || "No product data yet"}</small>
+        </article>
+
+        <article>
+          <span>Restock budget signal</span>
+          <b>${money(restockEstimate)}</b>
+          <small>Estimated value to refill low stock to 12 units</small>
+        </article>
+      </section>
+
+      <section class="seller-grid">
+        <article class="info-card dark seller-panel wide">
+          <div class="seller-panel-head">
+            <div>
+              <p class="kicker">Sales trend</p>
+              <h3>Daily receipt revenue</h3>
+            </div>
+            <span class="pill green">Live from receipts</span>
+          </div>
+
+          ${
+            salesRows.map(([date, value]) => `
+              <div class="seller-bar-row">
+                <span>${date}</span>
+                <div><i style="width:${Math.max(8, (value / maxSales) * 100)}%"></i></div>
+                <strong>${money(value)}</strong>
+              </div>
+            `).join("") || `<div class="empty">No sales data yet.</div>`
+          }
+        </article>
+
+        <article class="info-card dark seller-panel">
+          <div class="seller-panel-head">
+            <div>
+              <p class="kicker">Buyer demand</p>
+              <h3>Grade interest</h3>
+            </div>
+          </div>
+
+          ${
+            gradeDemand.map((item) => `
+              <div class="seller-bar-row compact">
+                <span>${item.grade}</span>
+                <div><i style="width:${Math.max(8, (item.value / maxGradeDemand) * 100)}%"></i></div>
+                <strong>${item.value}</strong>
+              </div>
+            `).join("")
+          }
+
+          <p class="seller-note">
+            Use this to plan beginner-friendly kits, RG/MG collector stock, and tool bundles.
+          </p>
+        </article>
+
+        <article class="info-card dark seller-panel wide">
+          <div class="seller-panel-head">
+            <div>
+              <p class="kicker">Inventory visibility</p>
+              <h3>Stock movement and restock actions</h3>
+            </div>
+            <span class="pill yellow">Editable demo</span>
+          </div>
+
+          <div class="seller-table">
+            <div class="seller-table-head">
+              <span>Product</span>
+              <span>Status</span>
+              <span>Stock</span>
+              <span>Demand</span>
+              <span>Action</span>
+            </div>
+
+            ${
+              demandRows.map((product) => `
+                <form class="seller-table-row seller-stock-form" data-id="${product.id}">
+                  <span>
+                    <b>${product.name}</b>
+                    <small>${product.grade} · ${product.skill}</small>
+                  </span>
+
+                  <span>
+                    <em class="pill ${statusClass(product.liveStatus)}">${product.liveStatus}</em>
+                  </span>
+
+                  <span>
+                    <input name="stock" type="number" min="0" value="${product.liveStock}" aria-label="${product.name} stock">
+                  </span>
+
+                  <span>
+                    <b>${product.demandScore}</b>
+                    <small>score</small>
+                  </span>
+
+                  <span class="seller-row-actions">
+                    <button class="ghost-btn seller-view-product" type="button" data-id="${product.id}">View</button>
+                    <button class="primary-btn" type="submit">Save</button>
+                  </span>
+                </form>
+              `).join("")
+            }
+          </div>
+        </article>
+
+        <article class="info-card dark seller-panel">
+          <div class="seller-panel-head">
+            <div>
+              <p class="kicker">Recommendations</p>
+              <h3>Analytics decisions</h3>
+            </div>
+          </div>
+
+          <ul class="seller-insights">
+            <li><b>Restock first:</b> ${lowStockProducts[0]?.name || "No urgent restock"}</li>
+            <li><b>Best demand:</b> ${topProduct?.name || "No demand data"}</li>
+            <li><b>Inventory risk:</b> ${lowStockProducts.length ? `${lowStockProducts.length} products need attention` : "Stock levels are balanced"}</li>
+            <li><b>Promotion idea:</b> Bundle tools with HG kits for beginner buyers.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="section-head">
+        <div>
+          <p class="kicker">Capstone features</p>
+          <h2>Seller page covers the complete platform flow</h2>
+        </div>
+      </section>
+
+      <section class="seller-feature-grid">
+        <article>
+          <span>01</span>
+          <h3>Product catalog</h3>
+          <p>Manage product names, grades, skill level, prices, tags, and product visibility.</p>
+          <a href="discover.html">Open catalog</a>
+        </article>
+
+        <article>
+          <span>02</span>
+          <h3>Inventory visibility</h3>
+          <p>Show available, low-stock, pre-order, restock soon, and out-of-stock labels.</p>
+          <a href="store.html">Open stores</a>
+        </article>
+
+        <article>
+          <span>03</span>
+          <h3>Reservations</h3>
+          <p>Track buyer reservations and pre-orders created from product browsing.</p>
+          <a href="receipts.html">Open receipts</a>
+        </article>
+
+        <article>
+          <span>04</span>
+          <h3>QR receipts</h3>
+          <p>Use QR confirmation as a transaction record and source of seller analytics.</p>
+          <a href="scanqr.html">Open scanner</a>
+        </article>
+
+        <article>
+          <span>05</span>
+          <h3>Points and rewards</h3>
+          <p>Measure buyer engagement through loyalty claims and reward redemptions.</p>
+          <a href="rewards.html">Open rewards</a>
+        </article>
+
+        <article>
+          <span>06</span>
+          <h3>Events and community</h3>
+          <p>Connect local events to demand signals for beginner kits, tools, and supplies.</p>
+          <a href="events.html">Open events</a>
+        </article>
+      </section>
+
+      <section class="seller-grid lower">
+        <article class="info-card dark seller-panel">
+          <div class="seller-panel-head">
+            <div>
+              <p class="kicker">Reservation queue</p>
+              <h3>Pickup and pre-order monitoring</h3>
+            </div>
+          </div>
+
+          <div class="seller-list">
+            ${
+              activeReservations.slice(0, 5).map((item) => `
+                <div>
+                  <span class="pill ${item.status === "Pre-order" ? "yellow" : "green"}">${item.status}</span>
+                  <b>${item.productName}</b>
+                  <small>${item.customer} · ${item.store} · ${item.date}</small>
+                </div>
+              `).join("") || `<div class="empty">No active reservations.</div>`
+            }
+          </div>
+        </article>
+
+        <article class="info-card dark seller-panel">
+          <div class="seller-panel-head">
+            <div>
+              <p class="kicker">Product requests</p>
+              <h3>Demand opportunities</h3>
+            </div>
+          </div>
+
+          <div class="seller-list">
+            ${
+              lowStockProducts.map((product) => `
+                <div>
+                  <span class="pill red">Request</span>
+                  <b>${product.name}</b>
+                  <small>${actionFor(product)}</small>
+                </div>
+              `).join("") || `
+                <div>
+                  <span class="pill green">Stable</span>
+                  <b>No urgent product request</b>
+                  <small>Keep monitoring QR receipts and reservations.</small>
+                </div>
+              `
+            }
+          </div>
+        </article>
+      </section>
+    `);
+
+    byId("sellerAddSale")?.addEventListener("click", () => {
+      const product = demandRows.find((item) => item.liveStatus !== "Out of Stock") || products[0];
+      if (product) addReceipt(product);
+    });
+
+    byId("sellerResetInventory")?.addEventListener("click", () => {
+      localStorage.removeItem(keys.inventory);
+      renderSeller();
+    });
+
+    document.querySelectorAll(".seller-stock-form").forEach((form) => {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const product = DATA.products.find((item) => item.id === form.dataset.id);
+        const input = form.querySelector("input[name='stock']");
+
+        setProductInventory(
+          form.dataset.id,
+          input.value,
+          product?.status === "Pre-order" ? "Pre-order" : ""
+        );
+
+        renderSeller();
+      });
+    });
+
+    document.querySelectorAll(".seller-view-product").forEach((button) => {
+      button.addEventListener("click", () => {
+        const product = demandRows.find((item) => item.id === button.dataset.id);
+        if (!product) return;
+
+        openModal(`
+          <h2>${product.name}</h2>
+          <p>${product.description}</p>
+          <p><b>Status:</b> ${product.liveStatus} · <b>Stock:</b> ${product.liveStock} · <b>Demand score:</b> ${product.demandScore}</p>
+          <p><b>Recommended seller action:</b> ${actionFor(product)}</p>
+        `);
+      });
+    });
   }
 
   function renderLogin() {
