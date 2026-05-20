@@ -1,39 +1,65 @@
-const Product = require("../models/Product");
+const Product = require('../models/Product');
+const mongoose = require('mongoose');
 
-// ADD PRODUCT (Admin use)
-exports.addProduct = async (req, res) => {
+const getProducts = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
-    res.json(product);
+    const products = await Product.find({});
+    res.status(200).json(products);
   } catch (error) {
-    res.status(500).json(error.message);
+    res.status(500).json({ message: "Server error fetching products", error: error.message });
   }
 };
 
-// GET ALL PRODUCTS
-exports.getProducts = async (req, res) => {
+const updateProductInventory = async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    res.status(500).json(error.message);
-  }
-};
+    const { stock, status } = req.body;
+    const productId = req.params.id;
 
-// FILTER PRODUCTS (onhand / preorder / restock)
-exports.filterProducts = async (req, res) => {
-  try {
-    const { status } = req.query;
+    let existingProduct = null;
 
-    const filter = {};
-
-    if (status) {
-      filter.status = status;
+    if (mongoose.Types.ObjectId.isValid(productId)) {
+      existingProduct = await Product.findById(new mongoose.Types.ObjectId(productId));
+    }
+    
+    if (!existingProduct) {
+      existingProduct = await Product.findOne({ id: productId });
     }
 
-    const products = await Product.find(filter);
-    res.json(products);
+    if (!existingProduct) {
+      return res.status(404).json({ message: `Product ${productId} not found inside your database collection.` });
+    }
+
+    const finalStock = Math.max(0, Number(stock) || 0);
+    let finalStatus = status;
+
+    if (!finalStatus) {
+      if (finalStock <= 0) {
+        finalStatus = existingProduct.status === "Pre-order" ? "Pre-order" : "Out of Stock";
+      } else if (finalStock <= 5) {
+        finalStatus = "Low Stock";
+      } else {
+        finalStatus = existingProduct.status === "Pre-order" ? "Pre-order" : "Available";
+      }
+    }
+
+    existingProduct.stock = finalStock;
+    existingProduct.status = finalStatus;
+
+    const updatedProduct = await existingProduct.save();
+    res.status(200).json(updatedProduct);
+
   } catch (error) {
-    res.status(500).json(error.message);
+    console.error("Mongoose execution error during inventory transaction:", error);
+    res.status(500).json({ message: "Server error updating inventory", error: error.message });
   }
+};
+
+const addProduct = async (req, res) => {
+  res.status(501).json({ message: "Not implemented yet" });
+};
+
+module.exports = {
+  getProducts,
+  updateProductInventory,
+  addProduct
 };
