@@ -248,7 +248,7 @@
       items: product.name,
       date: new Date().toISOString().slice(0, 10)
     };
-       const receipts = getReceipts();
+    const receipts = getReceipts();
     receipts.unshift(receipt);
     write(keys.receipts, receipts);
 
@@ -259,7 +259,7 @@
       setProductInventory(product.id, currentStock - 1);
     }
 
-       openModal(`
+    openModal(`
       <h2>Reservation created</h2>
       <p>Your digital receipt <b>${receipt.id}</b> is ready. You may claim ${receipt.points} points from the Receipts page.</p>
       <a class="primary-btn" href="receipts.html">Open receipts</a>
@@ -285,13 +285,13 @@
           <div class="hero-actions"><a class="primary-btn" href="discover.html">Browse kits</a><a class="ghost-btn" href="seller-dashboard.html">View seller dashboard</a></div>
         </div>
         <div class="hero-visual hero-visual-clean">
-  <img class="hero-mecha-img" src="../images/gundam.png" alt="Modern Gunpla mecha illustration">
-</div>
+          <img class="hero-mecha-img" src="../images/gundam.png" alt="Modern Gunpla mecha illustration">
+        </div>
       </section>
       <section class="feature-grid">
-        <article><span>01</span><h3>Less searching</h3><p>One organized catalog replaces scattered social media posts.</p></article>
-        <article><span>02</span><h3>Less waste</h3><p>Store analytics help avoid overstocking and missed demand.</p></article>
-        <article><span>03</span><h3>More trust</h3><p>Receipts, QR confirmation, and store profiles make transactions clearer.</p></article>
+        <article><span>01</span>      <h3>Less searching</h3><p>One organized catalog replaces scattered social media posts.</p></article>
+        <article><span>02</span>      <h3>Less waste</h3><p>Store analytics help avoid overstocking and missed demand.</p></article>
+        <article><span>03</span>      <h3>More trust</h3><p>Receipts, QR confirmation, and store profiles make transactions clearer.</p></article>
       </section>
       <section class="section-head"><div><p class="kicker">Featured kits</p><h2>Built for beginners and collectors</h2></div><a class="ghost-btn" href="discover.html">See all</a></section>
       <section class="product-grid">${DATA.products.slice(0, 3).map(productCard).join("")}</section>
@@ -376,7 +376,7 @@
       });
       byId("receipts").innerHTML = items.map((receipt) => {
         const isClaimed = claimed.includes(receipt.id);
-        return `<article class="receipt-card"><div class="receipt-icon">QR</div><div><span class="pill ${isClaimed ? "" : "green"}">${isClaimed ? "Claimed" : "Ready"}</span><h3>${receipt.id}</h3><p>${receipt.store} · ${receipt.items}</p><small>${receipt.date} · ${money(receipt.amount)} · ${receipt.points} pts</small></div><div class="button-stack"><button class="ghost-btn view-receipt" data-id="${receipt.id}">View</button><button class="primary-btn claim-receipt" data-id="${receipt.id}" ${isClaimed ? "disabled" : ""}>Claim</button></div></article>`;
+        return `<article class="receipt-card"><div class="receipt-icon">QR</div><div><span class="pill ${isClaimed ? "" : "green"}">${isClaimed ? "Claimed" : "Ready"}</span>      <h3>${receipt.id}</h3><p>${receipt.store} · ${receipt.items}</p><small>${receipt.date} · ${money(receipt.amount)} · ${receipt.points} pts</small></div><div class="button-stack"><button class="ghost-btn view-receipt" data-id="${receipt.id}">View</button><button class="primary-btn claim-receipt" data-id="${receipt.id}" ${isClaimed ? "disabled" : ""}>Claim</button></div></article>`;
       }).join("") || `<div class="empty">No receipts found.</div>`;
       document.querySelectorAll(".claim-receipt").forEach((button) => button.addEventListener("click", () => claimReceipt(button.dataset.id)));
       document.querySelectorAll(".view-receipt").forEach((button) => button.addEventListener("click", () => showReceipt(button.dataset.id)));
@@ -431,16 +431,30 @@
     }));
   }
 
-   function renderSeller() {
+  async function renderSeller() {
+    let liveProductsList = [];
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/products");
+      liveProductsList = await response.json();
+      
+      if (!liveProductsList || liveProductsList.length === 0) {
+        liveProductsList = DATA.products;
+      }
+    } catch (error) {
+      console.error("Failed fetching live products for seller dashboard, using fallback data:", error);
+      liveProductsList = DATA.products;
+    }
+
     const receipts = getReceipts();
     const transactions = getTransactions();
     const redemptions = getRedemptions();
     const reservations = getSellerReservations();
 
-    const products = DATA.products.map((product) => ({
+    const products = liveProductsList.map((product) => ({
       ...product,
-      liveStock: getProductStock(product),
-      liveStatus: getProductStatus(product),
+      liveStock: Number(product.stock),
+      liveStatus: product.status,
       soldCount: receipts.filter((receipt) =>
         receipt.items.toLowerCase().includes(product.name.toLowerCase())
       ).length
@@ -629,7 +643,7 @@
               <p class="kicker">Inventory visibility</p>
               <h3>Stock movement and restock actions</h3>
             </div>
-            <span class="pill yellow">Editable demo</span>
+            <span class="pill yellow">Live Database Connection</span>
           </div>
 
           <div class="seller-table">
@@ -802,19 +816,46 @@
     });
 
     document.querySelectorAll(".seller-stock-form").forEach((form) => {
-      form.addEventListener("submit", (event) => {
+      form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const product = DATA.products.find((item) => item.id === form.dataset.id);
+        const displayId = form.dataset.id; 
         const input = form.querySelector("input[name='stock']");
+        const updatedStock = Number(input.value);
+        
+        const matchedProduct = (typeof liveProductsList !== "undefined" && liveProductsList.find((item) => String(item.id) === String(displayId)))
+                               || DATA.products.find((item) => String(item.id) === String(displayId));
 
-        setProductInventory(
-          form.dataset.id,
-          input.value,
-          product?.status === "Pre-order" ? "Pre-order" : ""
-        );
+        const targetUrlId = matchedProduct?._id || displayId;
 
-        renderSeller();
+        try {
+          const response = await fetch(`http://localhost:5000/api/products/${targetUrlId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              stock: updatedStock,
+              status: matchedProduct?.status === "Pre-order" ? "Pre-order" : ""
+            })
+          });
+
+          if (response.ok) {
+            setProductInventory(displayId, updatedStock, matchedProduct?.status === "Pre-order" ? "Pre-order" : "");
+            alert("Inventory updated and synchronized successfully!");
+            renderSeller();
+          } else {
+            const responseText = await response.text();
+            let serverErrorMessage = responseText;
+            try { 
+              const parsedJson = JSON.parse(responseText); 
+              serverErrorMessage = parsedJson.message || serverErrorMessage;
+            } catch(e) {}
+            
+            alert(`Server rejected update (${response.status}): ${serverErrorMessage}`);
+          }
+        } catch (error) {
+          console.error("Network error communicating with database:", error);
+          alert("Network connection error. Check if your backend node application is online.");
+        }
       });
     });
 
@@ -834,11 +875,48 @@
   }
 
   function renderLogin() {
-    shell(`<section class="auth-card"><div><p class="kicker">Account access</p><h1>Welcome back, builder.</h1><p>Mock login for the frontend prototype. It saves only a demo profile in browser storage.</p></div><form id="loginForm"><label>Email<input required type="email" id="email" placeholder="builder@email.com"></label><label>Password<input required type="password" placeholder="••••••••"></label><label>Role<select id="role"><option>Buyer</option><option>Seller</option></select></label><button class="primary-btn">Login</button></form></section>`);
-    byId("loginForm").addEventListener("submit", (event) => {
+    shell(`
+      <section class="auth-card">
+        <div>
+          <p class="kicker">Account access</p>
+          <h1>Welcome back, builder.</h1>
+          <p>Login securely to sync your Gunpla Hub profile and stock data.</p>
+        </div>
+        <form id="loginForm">
+          <label>Email<input required type="email" id="email" placeholder="builder@email.com"></label>
+          <label>Password<input required type="password" id="password" placeholder="••••••••"></label>
+          <button class="primary-btn">Login</button>
+        </form>
+      </section>
+    `);
+
+    byId("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      write(keys.account, { email: byId("email").value, role: byId("role").value });
-      openModal(`<h2>Login saved</h2><p>Your demo account was saved in this browser.</p><a class="primary-btn" href="index.html">Go home</a>`);
+      
+      const email = byId("email").value;
+      const password = byId("password").value;
+
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          write(keys.account, { email: email, token: data.token });
+          localStorage.setItem("token", data.token);
+          
+          openModal(`<h2>Login Successful</h2><p>Connected to backend.</p><a class="primary-btn" href="index.html">Go home</a>`);
+        } else {
+          alert(data.message || "Invalid credentials. Check your backend auth database.");
+        }
+      } catch (error) {
+        console.error("Auth server error:", error);
+        alert("Failed to connect to the backend authentication server. Is your node server running on port 5000?");
+      }
     });
   }
 
