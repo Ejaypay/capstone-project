@@ -15,17 +15,20 @@ const updateProductInventory = async (req, res) => {
     const { stock, status } = req.body;
     const productId = req.params.id;
 
+    console.log(`[Inventory Update Request] ID received: ${productId} | Stock payload:`, stock);
+
     let existingProduct = null;
 
     if (mongoose.Types.ObjectId.isValid(productId)) {
-      existingProduct = await Product.findById(new mongoose.Types.ObjectId(productId));
+      existingProduct = await Product.findById(productId);
     }
     
     if (!existingProduct) {
-      existingProduct = await Product.findOne({ id: productId });
+      existingProduct = await Product.findOne({ id: productId.toString().trim() });
     }
 
     if (!existingProduct) {
+      console.warn(`[Inventory Update Warning] Product ID ${productId} was not found in the database.`);
       return res.status(404).json({ message: `Product ${productId} not found inside your database collection.` });
     }
 
@@ -46,6 +49,8 @@ const updateProductInventory = async (req, res) => {
     existingProduct.status = finalStatus;
 
     const updatedProduct = await existingProduct.save();
+    
+    console.log(`[Inventory Update Success] Product updated successfully. New Stock: ${updatedProduct.stock}`);
     res.status(200).json(updatedProduct);
 
   } catch (error) {
