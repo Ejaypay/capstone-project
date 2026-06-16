@@ -79,11 +79,7 @@ img {
   position: fixed;
   inset: 0;
   z-index: -2;
-  background:
-    radial-gradient(circle at 10% 8%, rgba(255, 38, 56, 0.34), transparent 26%),
-    radial-gradient(circle at 88% 8%, rgba(66, 165, 255, 0.24), transparent 27%),
-    radial-gradient(circle at 60% 92%, rgba(255, 196, 54, 0.14), transparent 34%),
-    linear-gradient(145deg, #07080d, #141720 48%, #07080d);
+  background: url("../images/background.gif") center / cover no-repeat fixed;
 }
 
 .ambient-bg::before {
@@ -401,6 +397,196 @@ p {
 .product-body strong {
   color: white;
   font-size: 1.25rem;
+}
+
+.guide-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.72fr);
+  gap: 34px;
+  align-items: center;
+  padding: 46px 0 18px;
+}
+
+.guide-hero h1 {
+  max-width: 860px;
+  font-size: clamp(2.7rem, 7vw, 5.8rem);
+  line-height: 0.92;
+  letter-spacing: -4px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #fff 10%, var(--yellow) 34%, var(--red) 58%, var(--blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.guide-hero p {
+  max-width: 760px;
+  color: #cbd5e1;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.guide-hero img {
+  width: min(100%, 430px);
+  justify-self: center;
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+}
+
+.guide-grade-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.guide-grade-card {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 18px;
+  min-height: 220px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.guide-grade-code {
+  min-height: 96px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255, 196, 54, 0.2), rgba(66, 165, 255, 0.18));
+  color: white;
+  font-size: 2.1rem;
+  font-weight: 1000;
+}
+
+.guide-grade-card p {
+  color: #c3cedd;
+}
+
+.guide-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.guide-meta span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: #dbe4ef;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.guide-pick {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  margin: 40px 0 6px;
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.guide-pick p {
+  max-width: 760px;
+  color: #cbd5e1;
+}
+
+.guide-path {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.guide-path span {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 17px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--red), var(--orange));
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.guide-path i {
+  width: 34px;
+  height: 2px;
+  background: var(--line);
+}
+
+.guide-step-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.guide-step-list article {
+  min-height: 180px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.guide-step-list span {
+  color: var(--yellow);
+  font-size: 0.78rem;
+  font-weight: 1000;
+}
+
+.guide-step-list p {
+  color: #c3cedd;
+}
+
+.guide-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 42px;
+}
+
+.guide-tool-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.guide-tool-list div {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.guide-tool-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.guide-tool-list b {
+  color: white;
+}
+
+.guide-checklist {
+  display: grid;
+  gap: 13px;
+  margin-top: 18px;
+  padding-left: 18px;
+  color: #cbd5e1;
+  line-height: 1.6;
 }
 
 .card-row {
@@ -733,6 +919,80 @@ option {
   letter-spacing: -3px;
 }
 
+.auth-rbac {
+  grid-template-columns: 0.95fr 1.05fr;
+  align-items: start;
+}
+
+.auth-copy > p {
+  color: #cbd5e1;
+  line-height: 1.65;
+}
+
+.role-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+
+.role-summary small {
+  color: var(--muted);
+}
+
+.auth-actions,
+.access-actions,
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.auth-forms {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.auth-tab {
+  min-height: 40px;
+  border-radius: 999px;
+  background: transparent;
+  color: #dbe4ef;
+  font-size: 0.74rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.auth-tab.active {
+  color: white;
+  background: linear-gradient(135deg, var(--red), var(--orange));
+  box-shadow: 0 12px 28px rgba(255, 38, 56, 0.22);
+}
+
+.auth-form.hidden {
+  display: none;
+}
+
+.access-card {
+  align-items: center;
+}
+
 form {
   display: grid;
   gap: 14px;
@@ -857,6 +1117,8 @@ label {
   }
 
   .hero,
+  .guide-hero,
+  .guide-pick,
   .scan-panel,
   .wallet,
   .auth-card,
@@ -866,10 +1128,21 @@ label {
 
   .product-grid,
   .feature-grid,
+  .guide-grade-grid,
+  .guide-step-list,
+  .guide-columns,
   .store-grid,
   .reward-grid,
   .metric-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .guide-pick {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-path {
+    justify-content: flex-start;
   }
 
   .hero-visual {
@@ -884,12 +1157,16 @@ label {
 
   .hero h1,
   .page-head h1,
+  .guide-hero h1,
   .auth-card h1 {
     letter-spacing: -2px;
   }
 
   .product-grid,
   .feature-grid,
+  .guide-grade-grid,
+  .guide-step-list,
+  .guide-columns,
   .store-grid,
   .reward-grid,
   .metric-grid,
@@ -907,6 +1184,30 @@ label {
 
   .button-stack {
     justify-content: start;
+  }
+
+  .guide-grade-card {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-grade-code {
+    width: 96px;
+  }
+
+  .guide-path i {
+    width: 18px;
+  }
+
+  .auth-actions,
+  .access-actions,
+  .modal-actions {
+    align-items: stretch;
+  }
+
+  .auth-actions > *,
+  .access-actions > *,
+  .modal-actions > * {
+    flex: 1 1 100%;
   }
 
   .bar-row {
@@ -1010,6 +1311,77 @@ label {
 .seller-note {
   margin-top: 14px;
   color: #cbd5e1;
+}
+
+.seller-offer-panel {
+  margin: 18px 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.seller-offer-panel .seller-panel-head p {
+  max-width: 780px;
+  color: #cbd5e1;
+}
+
+.seller-offer-form {
+  display: grid;
+  grid-template-columns: 1.1fr 150px 120px 130px 1.3fr auto;
+  gap: 12px;
+  align-items: end;
+  margin: 18px 0;
+}
+
+.seller-offer-form label {
+  min-width: 0;
+}
+
+.seller-offer-form .wide {
+  min-width: 220px;
+}
+
+.seller-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.seller-offer-card {
+  display: grid;
+  gap: 10px;
+  min-height: 230px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.seller-offer-top,
+.seller-offer-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.seller-offer-card p {
+  color: #cbd5e1;
+}
+
+.seller-offer-card small {
+  color: var(--muted);
+}
+
+.seller-offer-card strong {
+  color: white;
+}
+
+.seller-offer-actions {
+  align-self: end;
 }
 
 .seller-table {
@@ -1119,7 +1491,9 @@ label {
   .seller-command,
   .seller-grid,
   .seller-metric-grid,
-  .seller-feature-grid {
+  .seller-feature-grid,
+  .seller-offer-form,
+  .seller-offer-grid {
     grid-template-columns: 1fr;
   }
 

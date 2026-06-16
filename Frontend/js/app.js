@@ -12,7 +12,8 @@
     rsvps: "gunpla.rsvps.v1",
     account: "gunpla.account.v1",
     inventory: "gunpla.inventory.v1",
-    reservations: "gunpla.reservations.v1"
+    reservations: "gunpla.reservations.v1",
+    sellerOffers: "gunpla.sellerOffers.v1"
   };
 
   const read = (key, fallback) => {
@@ -27,6 +28,92 @@
   const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
   const money = (value) => `PHP ${Number(value).toLocaleString()}.00`;
   const byId = (id) => document.getElementById(id);
+  const roleLabels = {
+    guest: "Guest",
+    buyer: "Buyer",
+    seller: "Seller"
+  };
+  const accountRoles = ["buyer", "seller"];
+
+  function normalizeAccountRole(role) {
+    const normalized = String(role || "").trim().toLowerCase();
+    return accountRoles.includes(normalized) ? normalized : null;
+  }
+
+  function decodeToken(token) {
+    if (!token) return null;
+
+    try {
+      const payload = token.split(".")[1];
+      if (!payload) return null;
+
+      const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
+      const json = decodeURIComponent(
+        atob(padded)
+          .split("")
+          .map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
+          .join("")
+      );
+
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
+  }
+
+  function currentAccount() {
+    const saved = read(keys.account, null);
+    const token = saved?.token || localStorage.getItem("token");
+    const decoded = decodeToken(token);
+
+    if (token && !decoded) {
+      localStorage.removeItem(keys.account);
+      localStorage.removeItem("token");
+      return null;
+    }
+
+    const role = normalizeAccountRole(decoded?.role) || normalizeAccountRole(saved?.role);
+
+    if (decoded?.exp && decoded.exp * 1000 <= Date.now()) {
+      localStorage.removeItem(keys.account);
+      localStorage.removeItem("token");
+      return null;
+    }
+
+    if (!role || !token) return null;
+
+    return {
+      email: saved?.email || decoded?.email || "",
+      username: saved?.username || "",
+      role,
+      token
+    };
+  }
+
+  function currentRole() {
+    return currentAccount()?.role || "guest";
+  }
+
+  function roleHome(role) {
+    return role === "seller" ? "seller-dashboard.html" : "discover.html";
+  }
+
+  function signOut() {
+    localStorage.removeItem(keys.account);
+    localStorage.removeItem("token");
+    window.location.href = "login.html";
+  }
+
+  function accountChip() {
+    const account = currentAccount();
+
+    if (!account) {
+      return `<a class="login-chip" href="login.html">Login</a>`;
+    }
+
+    return `<button class="login-chip" id="logoutBtn" type="button">${roleLabels[account.role]} Logout</button>`;
+  }
 
   function getReceipts() {
     const saved = read(keys.receipts, null);
@@ -43,6 +130,53 @@
     return read(keys.redemptions, []);
   }
 
+  const defaultSellerOffers = [
+    {
+      id: "offer-nippers",
+      name: "Entry Nippers",
+      category: "Tool",
+      price: 420,
+      stock: 14,
+      status: "Available",
+      description: "Budget side cutters for clean first-kit runner cuts."
+    },
+    {
+      id: "offer-hobby-knife",
+      name: "Hobby Knife",
+      category: "Tool",
+      price: 260,
+      stock: 10,
+      status: "Available",
+      description: "Precision knife for careful nub cleanup and decal trimming."
+    },
+    {
+      id: "offer-sanding-set",
+      name: "Sanding Stick Set",
+      category: "Supply",
+      price: 180,
+      stock: 22,
+      status: "Available",
+      description: "Mixed grit sanding sticks for smoothing gate marks."
+    },
+    {
+      id: "offer-panel-service",
+      name: "Panel Lining Service",
+      category: "Service",
+      price: 350,
+      stock: 6,
+      status: "Bookable",
+      description: "Store-assisted panel lining for one HG or EG kit."
+    }
+  ];
+
+  function getSellerOffers() {
+    return read(keys.sellerOffers, defaultSellerOffers);
+  }
+
+  function setSellerOffers(offers) {
+    write(keys.sellerOffers, offers);
+  }
+
   function claimedIds() {
     return getTransactions().filter((item) => item.type === "claim").map((item) => item.receiptId);
   }
@@ -57,6 +191,27 @@
     return `<a class="${page === id ? "active" : ""}" href="${href}">${label}</a>`;
   }
 
+  function visibleNavItems() {
+    const role = currentRole();
+    const links = [
+      { id: "home", label: "Home", href: "index.html", roles: ["guest", "buyer", "seller"] },
+      { id: "discover", label: "Discover", href: "discover.html", roles: ["guest", "buyer", "seller"] },
+      { id: "guide", label: "Guide", href: "beginner-guide.html", roles: ["guest", "buyer", "seller"] },
+      { id: "stores", label: "Stores", href: "store.html", roles: ["guest", "buyer", "seller"] },
+      { id: "events", label: "Events", href: "events.html", roles: ["guest", "buyer", "seller"] },
+      { id: "receipts", label: "Receipts", href: "receipts.html", roles: ["buyer"] },
+      { id: "scan", label: "Scan QR", href: "scanqr.html", roles: ["buyer"] },
+      { id: "points", label: "Points", href: "points.html", roles: ["buyer"] },
+      { id: "rewards", label: "Rewards", href: "rewards.html", roles: ["buyer"] },
+      { id: "seller", label: "Seller", href: "seller-dashboard.html", roles: ["seller"] }
+    ];
+
+    return links
+      .filter((item) => item.roles.includes(role))
+      .map((item) => navItem(item.id, item.label, item.href))
+      .join("");
+  }
+
   function shell(content) {
     app.innerHTML = `
       <header class="topbar">
@@ -64,17 +219,9 @@
           <a class="brand" href="index.html"><b><span>GUNPLA</span> HUB</b><small>Baguio builders network</small></a>
           <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
           <nav class="nav-links" id="navLinks">
-            ${navItem("home", "Home", "index.html")}
-            ${navItem("discover", "Discover", "discover.html")}
-            ${navItem("stores", "Stores", "store.html")}
-            ${navItem("events", "Events", "events.html")}
-            ${navItem("receipts", "Receipts", "receipts.html")}
-            ${navItem("scan", "Scan QR", "scanqr.html")}
-            ${navItem("points", "Points", "points.html")}
-            ${navItem("rewards", "Rewards", "rewards.html")}
-            ${navItem("seller", "Seller", "seller-dashboard.html")}
+            ${visibleNavItems()}
           </nav>
-          <a class="login-chip" href="login.html">Login</a>
+          ${accountChip()}
         </div>
       </header>
       <main id="mainContent" class="container">${content}</main>
@@ -82,6 +229,7 @@
     `;
 
     byId("menuBtn")?.addEventListener("click", () => byId("navLinks").classList.toggle("open"));
+    byId("logoutBtn")?.addEventListener("click", signOut);
     byId("modalClose")?.addEventListener("click", closeModal);
     byId("modal")?.addEventListener("click", (event) => {
       if (event.target.id === "modal") closeModal();
@@ -101,6 +249,62 @@
 
   function titleBlock(kicker, title, text) {
     return `<section class="page-head"><p class="kicker">${kicker}</p><h1>${title}</h1><p>${text}</p></section>`;
+  }
+
+  function roleListText(roles) {
+    return roles.map((role) => roleLabels[role]).join(" or ");
+  }
+
+  function requirePageAccess(roles) {
+    const role = currentRole();
+
+    if (roles.includes(role)) return true;
+
+    const needs = roleListText(roles);
+    const action = role === "guest"
+      ? `<a class="primary-btn" href="login.html">Login or create account</a>`
+      : `<button class="primary-btn" id="accessSignOut" type="button">Switch account</button>`;
+
+    shell(`
+      <section class="auth-card access-card">
+        <div>
+          <p class="kicker">${roleLabels[role]} access</p>
+          <h1>${needs} only.</h1>
+          <p>This page is restricted to ${needs.toLowerCase()} accounts.</p>
+        </div>
+        <div class="access-actions">
+          ${action}
+          <a class="ghost-btn" href="index.html">Go home</a>
+        </div>
+      </section>
+    `);
+
+    byId("accessSignOut")?.addEventListener("click", signOut);
+    return false;
+  }
+
+  function requireActionAccess(roles, actionName) {
+    const role = currentRole();
+
+    if (roles.includes(role)) return true;
+
+    const needs = roleListText(roles);
+    const action = role === "guest"
+      ? `<a class="primary-btn" href="login.html">Login or create account</a>`
+      : `<button class="primary-btn" id="modalSignOut" type="button">Switch account</button>`;
+
+    openModal(`
+      <h2>${needs} account required</h2>
+      <p>You need a ${needs.toLowerCase()} account to ${actionName}.</p>
+      <div class="modal-actions">
+        ${action}
+        <button class="ghost-btn" type="button" id="modalStay">Stay here</button>
+      </div>
+    `);
+
+    byId("modalSignOut")?.addEventListener("click", signOut);
+    byId("modalStay")?.addEventListener("click", closeModal);
+    return false;
   }
 
   function getInventoryOverrides() {
@@ -217,6 +421,8 @@
   }
 
   function claimReceipt(receiptId) {
+    if (!requireActionAccess(["buyer"], "claim points")) return;
+
     const receipt = getReceipts().find((item) => item.id === receiptId);
     if (!receipt) return;
 
@@ -239,6 +445,8 @@
   }
 
   function addReceipt(product) {
+    if (!requireActionAccess(["buyer"], "reserve kits")) return;
+
     const store = DATA.stores.find((item) => item.id === product.storeId);
     const receipt = {
       id: `GH-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -266,6 +474,51 @@
     `);
   }
 
+  function recordSellerSale(item) {
+    if (!item) return;
+
+    const receipt = {
+      id: `GH-${Math.floor(100000 + Math.random() * 900000)}`,
+      store: "Seller Dashboard",
+      amount: Number(item.price) || 0,
+      points: Math.floor((Number(item.price) || 0) / 10),
+      items: item.name,
+      date: new Date().toISOString().slice(0, 10),
+      source: "seller-offer",
+      offerId: item.id,
+      category: item.category
+    };
+
+    const receipts = getReceipts();
+    receipts.unshift(receipt);
+    write(keys.receipts, receipts);
+
+    if (item.offerType === "seller-offer") {
+      const offers = getSellerOffers().map((offer) => {
+        if (offer.id !== item.id) return offer;
+
+        const stock = Math.max(0, Number(offer.stock || 0) - 1);
+        return {
+          ...offer,
+          stock,
+          status: stock <= 0 ? (offer.category === "Service" ? "Fully Booked" : "Out of Stock") : offer.status
+        };
+      });
+
+      setSellerOffers(offers);
+    }
+
+    openModal(`
+      <h2>Sale recorded</h2>
+      <p>${item.name} was added as receipt <b>${receipt.id}</b> for ${money(receipt.amount)}.</p>
+      <button class="primary-btn" id="sellerSaleDone" type="button">Done</button>
+    `);
+    byId("sellerSaleDone")?.addEventListener("click", () => {
+      closeModal();
+      renderSeller();
+    });
+  }
+
   function bindReserveButtons() {
     document.querySelectorAll(".reserve-btn").forEach((button) => {
       button.addEventListener("click", () => {
@@ -282,10 +535,7 @@
           <p class="kicker">Local hobby commerce platform</p>
           <h1>Discover. Build. Claim rewards.</h1>
           <p class="hero-text">Gunpla Hub connects Baguio builders with local stores, live stock labels, digital receipts, QR point claiming, and seller analytics that help stores stock smarter.</p>
-          <div class="hero-actions"><a class="primary-btn" href="discover.html">Browse kits</a><a class="ghost-btn" href="seller-dashboard.html">View seller dashboard</a></div>
-        </div>
-        <div class="hero-visual hero-visual-clean">
-          <img class="hero-mecha-img" src="../images/gundam.png" alt="Modern Gunpla mecha illustration">
+          <div class="hero-actions"><a class="primary-btn" href="discover.html">Browse kits</a><a class="ghost-btn" href="beginner-guide.html">Beginner guide</a><a class="ghost-btn" href="seller-dashboard.html">View seller dashboard</a></div>
         </div>
       </section>
       <section class="feature-grid">
@@ -322,6 +572,170 @@
     draw();
   }
 
+  function renderGuide() {
+    const grades = [
+      {
+        code: "EG",
+        name: "Entry Grade",
+        scale: "Usually 1/144",
+        level: "First kit",
+        time: "1 to 2 hours",
+        text: "Simple parts, low price, and very little cleanup. Choose this when you want to learn how runners, gates, stickers, and joints work."
+      },
+      {
+        code: "HG",
+        name: "High Grade",
+        scale: "Usually 1/144",
+        level: "Best beginner pick",
+        time: "2 to 5 hours",
+        text: "The safest starting point for most builders. HG kits are affordable, easy to collect, and detailed enough to practice panel lining and basic cleanup."
+      },
+      {
+        code: "RG",
+        name: "Real Grade",
+        scale: "Usually 1/144",
+        level: "Careful beginner to intermediate",
+        time: "5 to 10 hours",
+        text: "Small size with high detail. RG kits look impressive, but they use tiny parts and tighter assemblies, so patience matters more than speed."
+      },
+      {
+        code: "MG",
+        name: "Master Grade",
+        scale: "Usually 1/100",
+        level: "Second or third kit",
+        time: "8 to 16 hours",
+        text: "Larger builds with inner frames and stronger shelf presence. MG is easier to handle than RG in some ways, but it takes more time and space."
+      },
+      {
+        code: "SD",
+        name: "Super Deformed",
+        scale: "Stylized",
+        level: "Casual beginner",
+        time: "1 to 3 hours",
+        text: "Cute proportions, fewer parts, and quick builds. Good for younger builders or anyone who wants a relaxed desk project."
+      },
+      {
+        code: "PG",
+        name: "Perfect Grade",
+        scale: "Usually 1/60",
+        level: "Advanced",
+        time: "20 plus hours",
+        text: "Big, expensive, complex, and display-focused. Save this until you know you enjoy long builds and have the tools to clean parts well."
+      }
+    ];
+
+    const tools = [
+      ["Nippers", "Use side cutters made for plastic models. Cut away from the part first, then trim closer."],
+      ["Hobby knife", "Shaves tiny nub marks after cutting. Use light pressure and always cut away from your hand."],
+      ["Sanding sticks", "Smooth rough nub marks. Start with medium grit, then finish with finer grit."],
+      ["Tweezers", "Useful for small stickers, clear pieces, and RG detail parts."],
+      ["Panel liner", "Adds shadow into armor grooves. Start lightly and clean excess after it dries."]
+    ];
+
+    const steps = [
+      ["Read", "Check the manual symbols, runner letters, and part numbers before cutting anything."],
+      ["Clip", "Cut each part from the runner with a little plastic gate still attached."],
+      ["Clean", "Trim and sand nub marks before assembly so parts sit flush."],
+      ["Assemble", "Follow one manual step at a time and avoid forcing tight parts."],
+      ["Detail", "Add stickers, panel lines, and simple poses after the main build is stable."],
+      ["Display", "Keep spare hands, weapons, and stickers in a small labeled bag or box."]
+    ];
+
+    shell(`
+      <section class="guide-hero">
+        <div>
+          <p class="kicker">Beginner guide</p>
+          <h1>Start building with the right grade.</h1>
+          <p>Learn the difference between EG, HG, RG, MG, and other Gunpla grades, then follow a simple build flow that helps beginners avoid broken parts, stress marks, and wasted money.</p>
+          <div class="hero-actions">
+            <a class="primary-btn" href="#gradeGuide">Compare grades</a>
+            <a class="ghost-btn" href="#buildFlow">Build steps</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-head" id="gradeGuide">
+
+      </section>
+
+      <section class="guide-grade-grid">
+        ${grades.map((grade) => `
+          <article class="guide-grade-card">
+            <div class="guide-grade-code">${grade.code}</div>
+            <div>
+              <span class="pill ${grade.code === "HG" || grade.code === "EG" ? "green" : grade.code === "PG" ? "red" : "yellow"}">${grade.level}</span>
+              <h3>${grade.name}</h3>
+              <p>${grade.text}</p>
+              <div class="guide-meta">
+                <span>${grade.scale}</span>
+                <span>${grade.time}</span>
+              </div>
+            </div>
+          </article>
+        `).join("")}
+      </section>
+
+      <section class="guide-pick">
+        <div>
+          <p class="kicker">First kit choice</p>
+          <h2>Best path for beginners</h2>
+          <p>Start with an EG or HG kit if you want the lowest risk. Move to RG when you are comfortable handling small parts. Try MG when you want a larger, slower build with more frame detail.</p>
+        </div>
+        <div class="guide-path">
+          <span>EG</span>
+          <i></i>
+          <span>HG</span>
+          <i></i>
+          <span>RG or MG</span>
+        </div>
+      </section>
+
+      <section class="section-head" id="buildFlow">
+        <div>
+          <p class="kicker">Build flow</p>
+          <h2>A clean way to build</h2>
+        </div>
+      </section>
+
+      <section class="guide-step-list">
+        ${steps.map((step, index) => `
+          <article>
+            <span>${String(index + 1).padStart(2, "0")}</span>
+            <h3>${step[0]}</h3>
+            <p>${step[1]}</p>
+          </article>
+        `).join("")}
+      </section>
+
+      <section class="guide-columns">
+        <article class="info-card dark">
+          <p class="kicker">Starter tools</p>
+          <h2>What to buy first</h2>
+          <div class="guide-tool-list">
+            ${tools.map((tool) => `
+              <div>
+                <b>${tool[0]}</b>
+                <p>${tool[1]}</p>
+              </div>
+            `).join("")}
+          </div>
+        </article>
+
+        <article class="info-card dark">
+          <p class="kicker">Beginner mistakes</p>
+          <h2>What to avoid</h2>
+          <ul class="guide-checklist">
+            <li>Do not twist parts off the runner.</li>
+            <li>Do not cut flush against the part on the first cut.</li>
+            <li>Do not force pegs if the angle is wrong.</li>
+            <li>Do not rush foil stickers around curves.</li>
+            <li>Do not start with PG unless you already enjoy long builds.</li>
+          </ul>
+        </article>
+      </section>
+    `);
+  }
+
   function renderStores() {
     shell(`
       ${titleBlock("Store network", "Local stores with clearer stock visibility", "Find partner shops, specialties, and store details without messaging several sellers first.")}
@@ -347,11 +761,14 @@
   function renderEvents() {
     shell(`${titleBlock("Community events", "Build nights, workshops, and showcases", "RSVP to local activities and encourage builders to join the local scene.")}<section class="event-list" id="events"></section>`);
     const rsvps = read(keys.rsvps, []);
+    const isGuest = currentRole() === "guest";
     byId("events").innerHTML = DATA.events.map((event) => {
-      const joined = rsvps.includes(event.id);
-      return `<article class="event-card"><div class="date-chip"><b>${event.day}</b><span>${event.month}</span></div><div><span class="pill yellow">${event.type}</span><h3>${event.title}</h3><p>${event.description}</p><small>${event.venue}</small></div><button class="${joined ? "ghost-btn" : "primary-btn"} rsvp-btn" data-id="${event.id}">${joined ? "Going" : "RSVP"}</button></article>`;
+      const joined = !isGuest && rsvps.includes(event.id);
+      return `<article class="event-card"><div class="date-chip"><b>${event.day}</b><span>${event.month}</span></div><div><span class="pill yellow">${event.type}</span><h3>${event.title}</h3><p>${event.description}</p><small>${event.venue}</small></div><button class="${joined ? "ghost-btn" : "primary-btn"} rsvp-btn" data-id="${event.id}">${joined ? "Going" : isGuest ? "Login to RSVP" : "RSVP"}</button></article>`;
     }).join("");
     document.querySelectorAll(".rsvp-btn").forEach((button) => button.addEventListener("click", () => {
+      if (!requireActionAccess(["buyer", "seller"], "reserve event seats")) return;
+
       const list = read(keys.rsvps, []);
       const updated = list.includes(button.dataset.id) ? list.filter((id) => id !== button.dataset.id) : [...list, button.dataset.id];
       write(keys.rsvps, updated);
@@ -360,6 +777,8 @@
   }
 
   function renderReceipts() {
+    if (!requirePageAccess(["buyer"])) return;
+
     shell(`
       ${titleBlock("Digital receipts", "Claim points with one-time receipt records", "Receipts create a clear transaction trail for buyers and useful demand signals for sellers.")}
       <section class="toolbar"><input id="receiptSearch" placeholder="Search receipt or store"><select id="receiptFilter"><option value="all">All receipts</option><option value="ready">Ready</option><option value="claimed">Claimed</option></select><button class="primary-btn" id="sampleReceipt">Create sample</button></section>
@@ -405,18 +824,24 @@
   }
 
   function renderScan() {
+    if (!requirePageAccess(["buyer"])) return;
+
     const options = getReceipts().map((receipt) => `<option value="${receipt.id}">${receipt.id} - ${receipt.store}</option>`).join("");
     shell(`${titleBlock("QR scanner", "Prototype receipt validation", "Simulate scanning a digital receipt QR to claim loyalty points once.")}<section class="scan-panel"><div class="scanner"><div class="scan-line"></div><div class="fake-qr large">${qrPattern("scan-demo")}</div></div><div class="info-card dark"><h3>Scan receipt QR</h3><p>Select a receipt below, then validate it like a scanned QR code.</p><select id="scanSelect">${options}</select><button class="primary-btn" id="scanBtn">Validate receipt</button></div></section>`);
     byId("scanBtn")?.addEventListener("click", () => claimReceipt(byId("scanSelect").value));
   }
 
   function renderPoints() {
+    if (!requirePageAccess(["buyer"])) return;
+
     const balance = pointsBalance();
     const tx = getTransactions();
     shell(`${titleBlock("Points wallet", "Track earned loyalty points", "Points are earned from receipt QR claims and spent on local store rewards.")}<section class="wallet"><div><p class="kicker">Current balance</p><h2>${balance.toLocaleString()} pts</h2><div class="track"><span style="width:${Math.min(100, balance / 10)}%"></span></div><p>${balance >= 1000 ? "Gold Builder" : balance >= 500 ? "Silver Builder" : "Starter Builder"}</p></div><img src="../images/model.jpg" alt="Gunpla builder mascot"></section><section class="history-list">${tx.map((item) => `<article><b>+${item.points} pts</b><span>${item.store}</span><small>${item.receiptId} · ${new Date(item.date).toLocaleDateString()}</small></article>`).join("") || `<div class="empty">No point activity yet.</div>`}</section>`);
   }
 
   function renderRewards() {
+    if (!requirePageAccess(["buyer"])) return;
+
     shell(`${titleBlock("Rewards", "Redeem points for store perks", "Encourage repeat purchases through useful hobby rewards, not random coupons.")}<section class="reward-grid">${DATA.rewards.map((reward) => `<article class="info-card"><span class="pill yellow">${reward.cost} pts</span><h3>${reward.title}</h3><p>${reward.description}</p><small>${reward.store}</small><button class="primary-btn redeem-btn" data-id="${reward.id}">Redeem</button></article>`).join("")}</section>`);
     document.querySelectorAll(".redeem-btn").forEach((button) => button.addEventListener("click", () => {
       const reward = DATA.rewards.find((item) => item.id === button.dataset.id);
@@ -432,6 +857,9 @@
   }
 
   async function renderSeller() {
+    if (!requirePageAccess(["seller"])) return;
+
+    const sellerAccount = currentAccount();
     let liveProductsList = [];
     
     try {
@@ -450,6 +878,13 @@
     const transactions = getTransactions();
     const redemptions = getRedemptions();
     const reservations = getSellerReservations();
+    const sellerOffers = getSellerOffers();
+    const sellerOfferReceipts = receipts.filter((receipt) => receipt.source === "seller-offer");
+    const offerSales = sellerOfferReceipts.reduce((sum, receipt) => sum + Number(receipt.amount || 0), 0);
+    const serviceSales = sellerOfferReceipts
+      .filter((receipt) => receipt.category === "Service")
+      .reduce((sum, receipt) => sum + Number(receipt.amount || 0), 0);
+    const lowStockOffers = sellerOffers.filter((offer) => offer.category !== "Service" && Number(offer.stock || 0) <= 3);
 
     const products = liveProductsList.map((product) => ({
       ...product,
@@ -591,6 +1026,69 @@
           <b>${money(restockEstimate)}</b>
           <small>Estimated value to refill low stock to 12 units</small>
         </article>
+
+        <article>
+          <span>Tools and services</span>
+          <b>${money(offerSales)}</b>
+          <small>${sellerOfferReceipts.length} add-on receipts</small>
+        </article>
+
+        <article>
+          <span>Service revenue</span>
+          <b>${money(serviceSales)}</b>
+          <small>${sellerOffers.filter((offer) => offer.category === "Service").length} service listings</small>
+        </article>
+
+        <article>
+          <span>Add-on stock risk</span>
+          <b>${lowStockOffers.length}</b>
+          <small>Tools or supplies at 3 units or less</small>
+        </article>
+      </section>
+
+      <section class="seller-offer-panel">
+        <div class="seller-panel-head">
+          <div>
+            <p class="kicker">Other sales</p>
+            <h2>Tools, supplies, and services</h2>
+            <p>List add-on items like nippers, hobby knives, sanding tools, or paid services such as panel lining and build assistance.</p>
+          </div>
+          <span class="pill green">${sellerOffers.length} active offers</span>
+        </div>
+
+        <form class="seller-offer-form" id="sellerOfferForm">
+          <label>Offer name<input id="offerName" required placeholder="Nippers, hobby knife, panel lining"></label>
+          <label>Category
+            <select id="offerCategory" required>
+              <option>Tool</option>
+              <option>Supply</option>
+              <option>Service</option>
+              <option>Add-on</option>
+            </select>
+          </label>
+          <label>Price<input id="offerPrice" required type="number" min="1" placeholder="350"></label>
+          <label>Stock / slots<input id="offerStock" required type="number" min="0" placeholder="10"></label>
+          <label class="wide">Description<input id="offerDescription" required placeholder="Short seller note for this offer"></label>
+          <button class="primary-btn">Add offer</button>
+        </form>
+
+        <div class="seller-offer-grid">
+          ${sellerOffers.map((offer) => `
+            <article class="seller-offer-card">
+              <div class="seller-offer-top">
+                <span class="pill ${offer.category === "Service" ? "yellow" : Number(offer.stock || 0) <= 3 ? "red" : "green"}">${offer.category}</span>
+                <strong>${money(offer.price)}</strong>
+              </div>
+              <h3>${offer.name}</h3>
+              <p>${offer.description}</p>
+              <small>${offer.category === "Service" ? `${offer.stock} service slots` : `${offer.stock} units in stock`} Â· ${offer.status}</small>
+              <div class="seller-offer-actions">
+                <button class="primary-btn seller-offer-sale" type="button" data-id="${offer.id}" ${Number(offer.stock || 0) <= 0 ? "disabled" : ""}>Record sale</button>
+                <button class="ghost-btn seller-offer-delete" type="button" data-id="${offer.id}">Remove</button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
       </section>
 
       <section class="seller-grid">
@@ -805,9 +1303,55 @@
       </section>
     `);
 
+    byId("sellerOfferForm")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const category = byId("offerCategory").value;
+      const offer = {
+        id: `offer-${Date.now()}`,
+        name: byId("offerName").value.trim(),
+        category,
+        price: Math.max(1, Number(byId("offerPrice").value) || 0),
+        stock: Math.max(0, Number(byId("offerStock").value) || 0),
+        status: category === "Service" ? "Bookable" : "Available",
+        description: byId("offerDescription").value.trim()
+      };
+
+      setSellerOffers([offer, ...getSellerOffers()]);
+      renderSeller();
+    });
+
+    document.querySelectorAll(".seller-offer-sale").forEach((button) => {
+      button.addEventListener("click", () => {
+        const offer = getSellerOffers().find((item) => item.id === button.dataset.id);
+        if (!offer) return;
+        recordSellerSale({ ...offer, offerType: "seller-offer" });
+      });
+    });
+
+    document.querySelectorAll(".seller-offer-delete").forEach((button) => {
+      button.addEventListener("click", () => {
+        const offers = getSellerOffers().filter((item) => item.id !== button.dataset.id);
+        setSellerOffers(offers);
+        renderSeller();
+      });
+    });
+
     byId("sellerAddSale")?.addEventListener("click", () => {
       const product = demandRows.find((item) => item.liveStatus !== "Out of Stock") || products[0];
-      if (product) addReceipt(product);
+      if (!product) return;
+
+      if (product.liveStock > 0 && product.liveStatus !== "Pre-order") {
+        setProductInventory(product.id, product.liveStock - 1, product.liveStatus === "Pre-order" ? "Pre-order" : "");
+      }
+
+      recordSellerSale({
+        id: product.id,
+        name: product.name,
+        category: "Kit",
+        price: product.price,
+        offerType: "product"
+      });
     });
 
     byId("sellerResetInventory")?.addEventListener("click", () => {
@@ -831,7 +1375,10 @@
         try {
           const response = await fetch(`http://localhost:5000/api/products/${targetUrlId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${sellerAccount.token}`
+            },
             body: JSON.stringify({
               stock: updatedStock,
               status: matchedProduct?.status === "Pre-order" ? "Pre-order" : ""
@@ -874,45 +1421,154 @@
     });
   }
 
-  function renderLogin() {
+  function saveAuthenticatedAccount(data, fallback = {}) {
+    const user = data?.user || {};
+    const role = normalizeAccountRole(user.role) || normalizeAccountRole(fallback.role) || "buyer";
+    const account = {
+      username: user.username || fallback.username || "",
+      email: user.email || fallback.email || "",
+      role,
+      token: data.token
+    };
+
+    write(keys.account, account);
+    localStorage.setItem("token", data.token);
+    return account;
+  }
+
+  function responseMessage(data, fallback) {
+    if (typeof data === "string") return data;
+    return data?.message || fallback;
+  }
+
+  function renderAuth() {
+    const activeAccount = currentAccount();
+
     shell(`
-      <section class="auth-card">
-        <div>
-          <p class="kicker">Account access</p>
-          <h1>Welcome back, builder.</h1>
-          <p>Login securely to sync your Gunpla Hub profile and stock data.</p>
+      <section class="auth-card auth-rbac">
+        <div class="auth-copy">
+          <h1>Choose the right side.</h1>
+          <p>Guests can browse the public catalog. Buyers can reserve kits, claim QR points, and redeem rewards. Sellers can manage inventory and analytics.</p>
+          <div class="role-summary">
+            <span class="pill ${activeAccount ? "green" : "yellow"}">Current: ${roleLabels[currentRole()]}</span>
+            ${activeAccount?.email ? `<small>${activeAccount.email}</small>` : `<small>No account signed in</small>`}
+          </div>
+          <div class="auth-actions">
+            <a class="ghost-btn" id="guestAccess" href="index.html">Continue as guest</a>
+            ${activeAccount ? `<button class="ghost-btn" id="authLogout" type="button">Logout</button>` : ""}
+          </div>
         </div>
-        <form id="loginForm">
-          <label>Email<input required type="email" id="email" placeholder="builder@email.com"></label>
-          <label>Password<input required type="password" id="password" placeholder="••••••••"></label>
-          <button class="primary-btn">Login</button>
-        </form>
+
+        <div class="auth-forms">
+          <div class="auth-tabs" role="tablist" aria-label="Account access mode">
+            <button class="auth-tab active" type="button" data-auth-tab="login">Login</button>
+            <button class="auth-tab" type="button" data-auth-tab="register">Create account</button>
+          </div>
+
+          <form class="auth-form" id="loginForm">
+            <label>Account type
+              <select id="loginRole" required>
+                <option value="buyer">Buyer</option>
+                <option value="seller">Seller</option>
+              </select>
+            </label>
+            <label>Email<input required type="email" id="loginEmail" placeholder="builder@email.com"></label>
+            <label>Password<input required type="password" id="loginPassword" placeholder="Password"></label>
+            <button class="primary-btn">Login</button>
+          </form>
+
+          <form class="auth-form hidden" id="registerForm">
+            <label>Account type
+              <select id="registerRole" required>
+                <option value="buyer">Buyer</option>
+                <option value="seller">Seller</option>
+              </select>
+            </label>
+            <label>Username<input required type="text" id="registerUsername" placeholder="Gunpla builder"></label>
+            <label>Email<input required type="email" id="registerEmail" placeholder="builder@email.com"></label>
+            <label>Password<input required minlength="6" type="password" id="registerPassword" placeholder="At least 6 characters"></label>
+            <button class="primary-btn">Create account</button>
+          </form>
+        </div>
       </section>
     `);
 
+    byId("authLogout")?.addEventListener("click", signOut);
+    byId("guestAccess")?.addEventListener("click", () => {
+      localStorage.removeItem(keys.account);
+      localStorage.removeItem("token");
+    });
+
+    document.querySelectorAll(".auth-tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        const activeTab = button.dataset.authTab;
+
+        document.querySelectorAll(".auth-tab").forEach((item) => {
+          item.classList.toggle("active", item.dataset.authTab === activeTab);
+        });
+
+        byId("loginForm").classList.toggle("hidden", activeTab !== "login");
+        byId("registerForm").classList.toggle("hidden", activeTab !== "register");
+      });
+    });
+
     byId("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      
-      const email = byId("email").value;
-      const password = byId("password").value;
+
+      const payload = {
+        role: byId("loginRole").value,
+        email: byId("loginEmail").value,
+        password: byId("loginPassword").value
+      };
 
       try {
         const response = await fetch("http://localhost:5000/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
-        if (response.ok) {
-          write(keys.account, { email: email, token: data.token });
-          localStorage.setItem("token", data.token);
-          
-          openModal(`<h2>Login Successful</h2><p>Connected to backend.</p><a class="primary-btn" href="index.html">Go home</a>`);
-        } else {
-          alert(data.message || "Invalid credentials. Check your backend auth database.");
+        if (!response.ok) {
+          alert(responseMessage(data, "Invalid credentials. Check your account type, email, and password."));
+          return;
         }
+
+        const account = saveAuthenticatedAccount(data, payload);
+        openModal(`<h2>${roleLabels[account.role]} login successful</h2><p>Your ${account.role} access is active.</p><a class="primary-btn" href="${roleHome(account.role)}">Continue</a>`);
+      } catch (error) {
+        console.error("Auth server error:", error);
+        alert("Failed to connect to the backend authentication server. Is your node server running on port 5000?");
+      }
+    });
+
+    byId("registerForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const payload = {
+        role: byId("registerRole").value,
+        username: byId("registerUsername").value,
+        email: byId("registerEmail").value,
+        password: byId("registerPassword").value
+      };
+
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          alert(responseMessage(data, "Unable to create account. Check the form and try again."));
+          return;
+        }
+
+        const account = saveAuthenticatedAccount(data, payload);
+        openModal(`<h2>${roleLabels[account.role]} account created</h2><p>Your account is ready and signed in.</p><a class="primary-btn" href="${roleHome(account.role)}">Continue</a>`);
       } catch (error) {
         console.error("Auth server error:", error);
         alert("Failed to connect to the backend authentication server. Is your node server running on port 5000?");
@@ -923,6 +1579,7 @@
   const pages = {
     home: renderHome,
     discover: renderDiscover,
+    guide: renderGuide,
     stores: renderStores,
     events: renderEvents,
     receipts: renderReceipts,
@@ -930,7 +1587,7 @@
     points: renderPoints,
     rewards: renderRewards,
     seller: renderSeller,
-    login: renderLogin
+    login: renderAuth
   };
 
   (pages[page] || renderHome)();
