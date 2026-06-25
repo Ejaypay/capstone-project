@@ -645,7 +645,7 @@
       <section class="guide-hero">
         <div>
           <p class="kicker">Beginner guide</p>
-          <h1>Start building with the right grade.</h1>
+          <h1>Start building with the <span>right grade.</span></h1>
           <p>Learn the difference between EG, HG, RG, MG, and other Gunpla grades, then follow a simple build flow that helps beginners avoid broken parts, stress marks, and wasted money.</p>
           <div class="hero-actions">
             <a class="primary-btn" href="#gradeGuide">Compare grades</a>
