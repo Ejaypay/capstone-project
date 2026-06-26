@@ -34,6 +34,7 @@
     seller: "Seller"
   };
   const accountRoles = ["buyer", "seller"];
+  let navOutsideCloseBound = false;
 
   function normalizeAccountRole(role) {
     const normalized = String(role || "").trim().toLowerCase();
@@ -187,29 +188,63 @@
     return Math.max(0, earned - spent);
   }
 
-  function navItem(id, label, href) {
-    return `<a class="${page === id ? "active" : ""}" href="${href}">${label}</a>`;
+  function navItem(id, label, href, role = "") {
+    const roleAttr = role ? ` role="${role}"` : "";
+    return `<a class="${page === id ? "active" : ""}" href="${href}"${roleAttr}>${label}</a>`;
+  }
+
+  function navMenu(id, label, items) {
+    const active = items.some((item) => page === item.id);
+    const menuItems = items.map((item) => navItem(item.id, item.label, item.href, "menuitem")).join("");
+
+    return `
+      <div class="nav-menu ${active ? "active" : ""}" data-nav-menu="${id}">
+        <button class="nav-menu-trigger ${active ? "active" : ""}" type="button" aria-expanded="false">
+          ${label}
+        </button>
+        <div class="nav-dropdown" role="menu" aria-label="${label} menu">
+          ${menuItems}
+        </div>
+      </div>
+    `;
+  }
+
+  function closeNavMenus(exceptMenu = null) {
+    document.querySelectorAll("[data-nav-menu]").forEach((menu) => {
+      if (menu === exceptMenu) return;
+      menu.classList.remove("open");
+      menu.querySelector(".nav-menu-trigger")?.setAttribute("aria-expanded", "false");
+    });
   }
 
   function visibleNavItems() {
     const role = currentRole();
-    const links = [
-      { id: "home", label: "Home", href: "index.html", roles: ["guest", "buyer", "seller"] },
-      { id: "discover", label: "Discover", href: "discover.html", roles: ["guest", "buyer", "seller"] },
-      { id: "guide", label: "Guide", href: "beginner-guide.html", roles: ["guest", "buyer", "seller"] },
-      { id: "stores", label: "Stores", href: "store.html", roles: ["guest", "buyer", "seller"] },
-      { id: "events", label: "Events", href: "events.html", roles: ["guest", "buyer", "seller"] },
-      { id: "receipts", label: "Receipts", href: "receipts.html", roles: ["buyer"] },
-      { id: "scan", label: "Scan QR", href: "scanqr.html", roles: ["buyer"] },
-      { id: "points", label: "Points", href: "points.html", roles: ["buyer"] },
-      { id: "rewards", label: "Rewards", href: "rewards.html", roles: ["buyer"] },
-      { id: "seller", label: "Seller", href: "seller-dashboard.html", roles: ["seller"] }
+    const publicLinks = [
+      { id: "home", label: "Home", href: "index.html" },
+      { id: "discover", label: "Discover", href: "discover.html" },
+      { id: "guide", label: "Guide", href: "beginner-guide.html" },
+      { id: "stores", label: "Stores", href: "store.html" },
+      { id: "events", label: "Events", href: "events.html" }
+    ];
+    const buyerLinks = [
+      { id: "receipts", label: "Receipts", href: "receipts.html" },
+      { id: "scan", label: "Scan QR", href: "scanqr.html" },
+      { id: "points", label: "Points", href: "points.html" },
+      { id: "rewards", label: "Rewards", href: "rewards.html" }
+    ];
+    const sellerLinks = [
+      { id: "seller", label: "Dashboard", href: "seller-dashboard.html" },
+      { id: "seller-offers", label: "Offers & Services", href: "seller-dashboard.html#sellerOffers" },
+      { id: "seller-stock", label: "Stock Control", href: "seller-dashboard.html#sellerStock" },
+      { id: "seller-insights", label: "Insights", href: "seller-dashboard.html#sellerInsights" }
     ];
 
-    return links
-      .filter((item) => item.roles.includes(role))
-      .map((item) => navItem(item.id, item.label, item.href))
-      .join("");
+    const items = publicLinks.map((item) => navItem(item.id, item.label, item.href));
+
+    if (role === "buyer") items.push(navMenu("buyer", "Buyer", buyerLinks));
+    if (role === "seller") items.push(navMenu("seller", "Seller", sellerLinks));
+
+    return items.join("");
   }
 
   function shell(content) {
@@ -229,6 +264,26 @@
     `;
 
     byId("menuBtn")?.addEventListener("click", () => byId("navLinks").classList.toggle("open"));
+    document.querySelectorAll("[data-nav-menu]").forEach((menu) => {
+      const trigger = menu.querySelector(".nav-menu-trigger");
+
+      trigger?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const isOpen = menu.classList.toggle("open");
+
+        trigger.setAttribute("aria-expanded", String(isOpen));
+        closeNavMenus(menu);
+      });
+    });
+
+    if (!navOutsideCloseBound) {
+      document.addEventListener("click", () => closeNavMenus());
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeNavMenus();
+      });
+      navOutsideCloseBound = true;
+    }
+
     byId("logoutBtn")?.addEventListener("click", signOut);
     byId("modalClose")?.addEventListener("click", closeModal);
     byId("modal")?.addEventListener("click", (event) => {
@@ -1046,7 +1101,7 @@
         </article>
       </section>
 
-      <section class="seller-offer-panel">
+      <section class="seller-offer-panel" id="sellerOffers">
         <div class="seller-panel-head">
           <div>
             <p class="kicker">Other sales</p>
@@ -1135,7 +1190,7 @@
           </p>
         </article>
 
-        <article class="info-card dark seller-panel wide">
+        <article class="info-card dark seller-panel wide" id="sellerStock">
           <div class="seller-panel-head">
             <div>
               <p class="kicker">Inventory visibility</p>
@@ -1184,7 +1239,7 @@
           </div>
         </article>
 
-        <article class="info-card dark seller-panel">
+        <article class="info-card dark seller-panel" id="sellerInsights">
           <div class="seller-panel-head">
             <div>
               <p class="kicker">Recommendations</p>
