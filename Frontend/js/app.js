@@ -15,6 +15,9 @@
     reservations: "gunpla.reservations.v1",
     sellerOffers: "gunpla.sellerOffers.v1"
   };
+  const guideVideoDbName = "gunpla.guideVideos.v1";
+  const guideVideoStoreName = "videos";
+  let guideVideoObjectUrls = [];
 
   const read = (key, fallback) => {
     try {
@@ -362,6 +365,198 @@
     return false;
   }
 
+  function escapeHtml(value) {
+    const replacements = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    };
+
+    return String(value ?? "").replace(/[&<>"']/g, (char) => replacements[char]);
+  }
+
+  function formatBytes(bytes) {
+    const size = Number(bytes || 0);
+    if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    if (size >= 1024) return `${Math.round(size / 1024)} KB`;
+    return `${size} B`;
+  }
+
+  function openGuideVideoDb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        reject(new Error("IndexedDB is not available."));
+        return;
+      }
+
+      const request = indexedDB.open(guideVideoDbName, 1);
+
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(guideVideoStoreName)) {
+          db.createObjectStore(guideVideoStoreName, { keyPath: "id" });
+        }
+      };
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("Unable to open video storage."));
+    });
+  }
+
+  async function useGuideVideoStore(mode, operation) {
+    const db = await openGuideVideoDb();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(guideVideoStoreName, mode);
+      const store = transaction.objectStore(guideVideoStoreName);
+      let request;
+
+      transaction.oncomplete = () => db.close();
+      transaction.onerror = () => {
+        db.close();
+        reject(transaction.error || new Error("Video storage transaction failed."));
+      };
+
+      try {
+        request = operation(store);
+      } catch (error) {
+        db.close();
+        reject(error);
+        return;
+      }
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("Video storage request failed."));
+    });
+  }
+
+  async function getGuideVideos() {
+    const videos = await useGuideVideoStore("readonly", (store) => store.getAll());
+    return (videos || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  function saveGuideVideo(video) {
+    return useGuideVideoStore("readwrite", (store) => store.put(video));
+  }
+
+  function deleteGuideVideo(id) {
+    return useGuideVideoStore("readwrite", (store) => store.delete(id));
+  }
+
+  function revokeGuideVideoUrls() {
+    guideVideoObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+    guideVideoObjectUrls = [];
+  }
+
+  function guideVideoCard(video, account) {
+    const url = URL.createObjectURL(video.blob);
+    const owner = account?.email || "";
+    const canRemove = owner && video.owner === owner;
+    const uploadedAt = new Date(video.createdAt).toLocaleDateString();
+
+    guideVideoObjectUrls.push(url);
+
+    return `
+      <article class="guide-video-card">
+        <video src="${url}" controls preload="metadata"></video>
+        <div>
+          <div class="card-row">
+            <span class="pill yellow">${escapeHtml(video.grade)}</span>
+            <small>${escapeHtml(uploadedAt)}</small>
+          </div>
+          <h3>${escapeHtml(video.title)}</h3>
+          <p>${escapeHtml(video.notes || "Builder showcase upload.")}</p>
+          <small>By ${escapeHtml(video.builder)} · ${escapeHtml(roleLabels[video.role] || "Builder")} · ${escapeHtml(formatBytes(video.size))}</small>
+          ${canRemove ? `<button class="ghost-btn guide-video-delete" type="button" data-video-id="${escapeHtml(video.id)}">Remove</button>` : ""}
+        </div>
+      </article>
+    `;
+  }
+
+  async function drawGuideVideos() {
+    const gallery = byId("guideVideoGallery");
+    if (!gallery) return;
+
+    gallery.innerHTML = `<div class="empty">Loading build videos...</div>`;
+
+    try {
+      const account = currentAccount();
+      const videos = await getGuideVideos();
+      revokeGuideVideoUrls();
+
+      gallery.innerHTML = videos.length
+        ? videos.map((video) => guideVideoCard(video, account)).join("")
+        : `<div class="empty">No Gundam build videos uploaded yet.</div>`;
+
+      document.querySelectorAll(".guide-video-delete").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await deleteGuideVideo(button.dataset.videoId);
+          drawGuideVideos();
+        });
+      });
+    } catch (error) {
+      console.error("Failed loading guide build videos:", error);
+      gallery.innerHTML = `<div class="empty">Video storage is unavailable in this browser session.</div>`;
+    }
+  }
+
+  function bindGuideVideoFeature() {
+    const form = byId("guideVideoForm");
+    drawGuideVideos();
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (!requireActionAccess(["buyer", "seller"], "upload build videos")) return;
+
+      const file = byId("guideVideoFile")?.files?.[0];
+      if (!file || !file.type.startsWith("video/")) {
+        alert("Please choose a valid video file.");
+        return;
+      }
+
+      if (file.size > 100 * 1024 * 1024) {
+        alert("Please choose a video under 100 MB for the local demo gallery.");
+        return;
+      }
+
+      const account = currentAccount();
+      const role = currentRole();
+      const title = byId("guideVideoTitle").value.trim() || file.name.replace(/\.[^/.]+$/, "");
+      const video = {
+        id: `build-video-${Date.now()}`,
+        title,
+        grade: byId("guideVideoGrade").value,
+        notes: byId("guideVideoNotes").value.trim(),
+        builder: account?.username || account?.email || roleLabels[role],
+        owner: account?.email || "",
+        role,
+        fileName: file.name,
+        size: file.size,
+        type: file.type,
+        createdAt: new Date().toISOString(),
+        blob: file
+      };
+
+      try {
+        await saveGuideVideo(video);
+        form.reset();
+        await drawGuideVideos();
+        openModal(`
+          <h2>Build video uploaded</h2>
+          <p>${escapeHtml(title)} is now listed in the guide showcase.</p>
+          <button class="primary-btn" type="button" id="guideVideoDone">Done</button>
+        `);
+        byId("guideVideoDone")?.addEventListener("click", closeModal);
+      } catch (error) {
+        console.error("Failed saving guide build video:", error);
+        alert("Unable to save the video in this browser session.");
+      }
+    });
+  }
+
   function getInventoryOverrides() {
     return read(keys.inventory, {});
   }
@@ -695,6 +890,35 @@
       ["Detail", "Add stickers, panel lines, and simple poses after the main build is stable."],
       ["Display", "Keep spare hands, weapons, and stickers in a small labeled bag or box."]
     ];
+    const canUploadVideo = ["buyer", "seller"].includes(currentRole());
+    const videoUploadPanel = canUploadVideo
+      ? `
+        <form class="guide-video-form" id="guideVideoForm">
+          <label>Video title<input id="guideVideoTitle" maxlength="80" placeholder="HG Aerial custom build"></label>
+          <label>Build grade
+            <select id="guideVideoGrade">
+              <option>EG</option>
+              <option selected>HG</option>
+              <option>RG</option>
+              <option>MG</option>
+              <option>SD</option>
+              <option>PG</option>
+              <option>Custom</option>
+            </select>
+          </label>
+          <label class="wide">Build notes<textarea id="guideVideoNotes" maxlength="220" placeholder="Paint, panel lining, tools used, or build difficulty"></textarea></label>
+          <label class="wide">Build video<input id="guideVideoFile" type="file" accept="video/*" required></label>
+          <button class="primary-btn" type="submit">Upload video</button>
+        </form>
+      `
+      : `
+        <article class="guide-video-lock">
+          <p class="kicker">Buyer or seller access</p>
+          <h3>Login to upload a build video</h3>
+          <p>Guests can browse the guide, but Gundam build uploads are reserved for buyer and seller accounts.</p>
+          <a class="primary-btn" href="login.html">Login or create account</a>
+        </article>
+      `;
 
     shell(`
       <section class="guide-hero">
@@ -705,6 +929,7 @@
           <div class="hero-actions">
             <a class="primary-btn" href="#gradeGuide">Compare grades</a>
             <a class="ghost-btn" href="#buildFlow">Build steps</a>
+            <a class="ghost-btn" href="#buildVideos">Build videos</a>
           </div>
         </div>
       </section>
@@ -762,6 +987,27 @@
         `).join("")}
       </section>
 
+      <section class="section-head" id="buildVideos">
+        <div>
+          <p class="kicker">Build showcase</p>
+          <h2>Upload Gundam build videos</h2>
+        </div>
+      </section>
+
+      <section class="guide-video-panel">
+        <article class="info-card dark guide-video-uploader">
+          <div>
+            <p class="kicker">Community upload</p>
+            <h3>Share your finished kit or work in progress</h3>
+            <p>Buyers and sellers can post short local showcase videos for other builders browsing the beginner guide.</p>
+          </div>
+          ${videoUploadPanel}
+        </article>
+        <div class="guide-video-gallery" id="guideVideoGallery">
+          <div class="empty">Loading build videos...</div>
+        </div>
+      </section>
+
       <section class="guide-columns">
         <article class="info-card dark">
           <p class="kicker">Starter tools</p>
@@ -789,6 +1035,7 @@
         </article>
       </section>
     `);
+    bindGuideVideoFeature();
   }
 
   function renderStores() {

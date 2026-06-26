@@ -45,7 +45,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -842,6 +843,76 @@ p {
   line-height: 1.6;
 }
 
+.guide-video-panel {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.guide-video-uploader {
+  display: grid;
+  gap: 18px;
+}
+
+.guide-video-form {
+  grid-template-columns: 1fr 1fr;
+}
+
+.guide-video-form .wide {
+  grid-column: 1 / -1;
+}
+
+.guide-video-lock {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.guide-video-gallery {
+  display: grid;
+  gap: 16px;
+}
+
+.guide-video-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.82fr) 1fr;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.guide-video-card video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: #05070b;
+  object-fit: cover;
+}
+
+.guide-video-card h3 {
+  margin-top: 8px;
+}
+
+.guide-video-card p {
+  color: #cbd5e1;
+}
+
+.guide-video-card small {
+  color: var(--muted);
+}
+
+.guide-video-delete {
+  margin-top: 14px;
+}
+
 .card-row {
   display: flex;
   justify-content: space-between;
@@ -900,7 +971,8 @@ p {
 }
 
 input,
-select {
+select,
+textarea {
   height: 48px;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -908,6 +980,14 @@ select {
   padding: 0 15px;
   background: rgba(255, 255, 255, 0.09);
   color: var(--text);
+}
+
+textarea {
+  min-height: 112px;
+  height: auto;
+  padding: 14px 15px;
+  resize: vertical;
+  line-height: 1.5;
 }
 
 option {
@@ -1392,6 +1472,7 @@ label {
   .hero,
   .guide-hero,
   .guide-pick,
+  .guide-video-panel,
   .scan-panel,
   .wallet,
   .auth-card,
@@ -1440,6 +1521,8 @@ label {
   .guide-grade-grid,
   .guide-step-list,
   .guide-columns,
+  .guide-video-form,
+  .guide-video-card,
   .store-grid,
   .reward-grid,
   .metric-grid,
