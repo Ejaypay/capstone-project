@@ -90,6 +90,8 @@
     return {
       email: saved?.email || decoded?.email || "",
       username: saved?.username || "",
+      storeName: saved?.storeName || "",
+      storeLocation: saved?.storeLocation || "",
       role,
       token
     };
@@ -1729,6 +1731,8 @@
     const account = {
       username: user.username || fallback.username || "",
       email: user.email || fallback.email || "",
+      storeName: user.storeName || fallback.storeName || "",
+      storeLocation: user.storeLocation || fallback.storeLocation || "",
       role,
       token: data.token
     };
@@ -1789,6 +1793,10 @@
             <label>Username<input required type="text" id="registerUsername" placeholder="Gunpla builder"></label>
             <label>Email<input required type="email" id="registerEmail" placeholder="builder@email.com"></label>
             <label>Password<input required minlength="6" type="password" id="registerPassword" placeholder="At least 6 characters"></label>
+            <div class="seller-register-fields hidden" id="sellerRegisterFields">
+              <label>Store name<input type="text" id="registerStoreName" placeholder="Baguio Hobby Garage"></label>
+              <label>Store location<input type="text" id="registerStoreLocation" placeholder="Session Road, Baguio City"></label>
+            </div>
             <button class="primary-btn">Create account</button>
           </form>
         </div>
@@ -1800,6 +1808,23 @@
       localStorage.removeItem(keys.account);
       localStorage.removeItem("token");
     });
+
+    const syncSellerRegisterFields = () => {
+      const isSeller = byId("registerRole")?.value === "seller";
+      const sellerFields = byId("sellerRegisterFields");
+      const storeName = byId("registerStoreName");
+      const storeLocation = byId("registerStoreLocation");
+
+      sellerFields?.classList.toggle("hidden", !isSeller);
+      [storeName, storeLocation].forEach((input) => {
+        if (!input) return;
+        input.required = isSeller;
+        if (!isSeller) input.value = "";
+      });
+    };
+
+    byId("registerRole")?.addEventListener("change", syncSellerRegisterFields);
+    syncSellerRegisterFields();
 
     document.querySelectorAll(".auth-tab").forEach((button) => {
       button.addEventListener("click", () => {
@@ -1854,6 +1879,11 @@
         email: byId("registerEmail").value,
         password: byId("registerPassword").value
       };
+
+      if (payload.role === "seller") {
+        payload.storeName = byId("registerStoreName").value.trim();
+        payload.storeLocation = byId("registerStoreLocation").value.trim();
+      }
 
       try {
         const response = await fetch("http://localhost:5000/api/auth/register", {

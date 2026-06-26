@@ -22,6 +22,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ["buyer", "seller"],
     default: "buyer"
+  },
+  storeName: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  storeLocation: {
+    type: String,
+    trim: true,
+    default: ""
   }
 });
 

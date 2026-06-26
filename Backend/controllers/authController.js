@@ -14,7 +14,9 @@ function publicUser(user) {
    id: user._id,
    username: user.username,
    email: user.email,
-   role: user.role
+   role: user.role,
+   storeName: user.storeName || "",
+   storeLocation: user.storeLocation || ""
  };
 }
 
@@ -28,8 +30,10 @@ function createToken(user) {
 
 exports.register = async(req,res)=>{
  try {
-   const {username,email,password,role} = req.body;
+   const {username,email,password,role,storeName,storeLocation} = req.body;
    const accountRole = sanitizeRole(role);
+   const normalizedStoreName = String(storeName || "").trim();
+   const normalizedStoreLocation = String(storeLocation || "").trim();
 
    if(!username || !email || !password) {
      return res.status(400).json({message:"Username, email, and password are required"});
@@ -37,6 +41,10 @@ exports.register = async(req,res)=>{
 
    if(!accountRole) {
      return res.status(400).json({message:"Role must be buyer or seller"});
+   }
+
+   if(accountRole === "seller" && (!normalizedStoreName || !normalizedStoreLocation)) {
+     return res.status(400).json({message:"Store name and location are required for seller accounts"});
    }
 
    const normalizedEmail = String(email).trim().toLowerCase();
@@ -52,7 +60,9 @@ exports.register = async(req,res)=>{
      username,
      email: normalizedEmail,
      password:hashed,
-     role: accountRole
+     role: accountRole,
+     storeName: accountRole === "seller" ? normalizedStoreName : "",
+     storeLocation: accountRole === "seller" ? normalizedStoreLocation : ""
    });
 
    const token = createToken(user);
