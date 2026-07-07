@@ -1,0 +1,271 @@
+/* Seller dashboard styles */
+.seller-command {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: end;
+  margin: 18px 0 22px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(255, 38, 56, 0.14), rgba(255, 122, 24, 0.12)),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.seller-command p {
+  max-width: 760px;
+  color: #cbd5e1;
+}
+
+.seller-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.seller-metric-grid {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 18px;
+}
+
+.metric-grid article small {
+  display: block;
+  margin-top: 8px;
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+.seller-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.seller-grid.lower {
+  margin-top: 18px;
+}
+
+.seller-panel.wide {
+  min-width: 0;
+}
+
+.seller-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.seller-panel-head .kicker {
+  margin-bottom: 6px;
+}
+
+.seller-bar-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px;
+  gap: 12px;
+  align-items: center;
+  margin: 13px 0;
+}
+
+.seller-bar-row.compact {
+  grid-template-columns: 44px 1fr 40px;
+}
+
+.seller-bar-row > div {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.seller-bar-row i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--red), var(--orange), var(--yellow));
+}
+
+.seller-note {
+  margin-top: 14px;
+  color: #cbd5e1;
+}
+
+.seller-offer-panel {
+  margin: 18px 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.seller-offer-panel .seller-panel-head p {
+  max-width: 780px;
+  color: #cbd5e1;
+}
+
+.seller-offer-form {
+  display: grid;
+  grid-template-columns: 1.1fr 150px 120px 130px 1.3fr auto;
+  gap: 12px;
+  align-items: end;
+  margin: 18px 0;
+}
+
+.seller-offer-form label {
+  min-width: 0;
+}
+
+.seller-offer-form .wide {
+  min-width: 220px;
+}
+
+.seller-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.seller-offer-card {
+  display: grid;
+  gap: 10px;
+  min-height: 230px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.seller-offer-top,
+.seller-offer-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.seller-offer-card p {
+  color: #cbd5e1;
+}
+
+.seller-offer-card small {
+  color: var(--muted);
+}
+
+.seller-offer-card strong {
+  color: white;
+}
+
+.seller-offer-actions {
+  align-self: end;
+}
+
+.seller-table {
+  overflow: auto;
+}
+
+.seller-table-head,
+.seller-table-row {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.4fr) 130px 92px 90px 190px;
+  gap: 12px;
+  align-items: center;
+  min-width: 820px;
+}
+
+.seller-table-head {
+  padding: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.seller-table-row {
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+}
+
+.seller-table-row small,
+.seller-list small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.seller-table-row input {
+  width: 80px;
+  height: 40px;
+  border-radius: 13px;
+}
+
+.seller-row-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.seller-insights {
+  display: grid;
+  gap: 12px;
+  padding-left: 18px;
+  color: #dce6f3;
+  line-height: 1.55;
+}
+
+.seller-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.seller-feature-grid article {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.seller-feature-grid span {
+  color: var(--red);
+  font-size: 0.74rem;
+  font-weight: 1000;
+}
+
+.seller-feature-grid p {
+  color: #cbd5e1;
+}
+
+.seller-feature-grid a {
+  display: inline-flex;
+  margin-top: 12px;
+  color: var(--yellow);
+  font-weight: 900;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.seller-list {
+  display: grid;
+  gap: 12px;
+}
+
+.seller-list > div {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.seller-list b {
+  display: block;
+  margin-top: 8px;
+}

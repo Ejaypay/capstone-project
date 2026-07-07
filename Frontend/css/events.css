@@ -1,0 +1,43 @@
+/* Events page styles */
+.event-list {
+  display: grid;
+  gap: 16px;
+}
+
+.event-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 24px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.event-card p {
+  color: var(--muted);
+}
+
+.date-chip {
+  width: 68px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  color: var(--ink);
+  font-weight: 1000;
+  align-content: center;
+}
+
+.date-chip b {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.date-chip span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}

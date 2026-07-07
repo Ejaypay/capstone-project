@@ -1,0 +1,32 @@
+/* Receipts page styles */
+.receipt-list {
+  display: grid;
+  gap: 16px;
+}
+
+.receipt-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 24px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.receipt-card p {
+  color: var(--muted);
+}
+
+.receipt-icon {
+  width: 68px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  color: var(--ink);
+  font-weight: 1000;
+}

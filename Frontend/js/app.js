@@ -957,20 +957,7 @@
         `).join("")}
       </section>
 
-      <section class="guide-pick">
-        <div>
-          <p class="kicker">First kit choice</p>
-          <h2>Best path for beginners</h2>
-          <p>Start with an EG or HG kit if you want the lowest risk. Move to RG when you are comfortable handling small parts. Try MG when you want a larger, slower build with more frame detail.</p>
-        </div>
-        <div class="guide-path">
-          <span>EG</span>
-          <i></i>
-          <span>HG</span>
-          <i></i>
-          <span>RG or MG</span>
-        </div>
-      </section>
+
 
       <section class="section-head" id="buildFlow">
         <div>
@@ -1753,8 +1740,6 @@
     shell(`
       <section class="auth-card auth-rbac">
         <div class="auth-copy">
-          <h1>Choose the right side.</h1>
-          <p>Guests can browse the public catalog. Buyers can reserve kits, claim QR points, and redeem rewards. Sellers can manage inventory and analytics.</p>
           <div class="role-summary">
             <span class="pill ${activeAccount ? "green" : "yellow"}">Current: ${roleLabels[currentRole()]}</span>
             ${activeAccount?.email ? `<small>${activeAccount.email}</small>` : `<small>No account signed in</small>`}

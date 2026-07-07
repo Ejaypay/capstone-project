@@ -1,0 +1,30 @@
+/* Rewards page styles */
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.reward-grid .info-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 230px;
+  gap: 10px;
+}
+
+.reward-grid .info-card small {
+  display: block;
+  margin-top: auto;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.reward-grid .redeem-btn {
+  margin-top: 12px;
+  padding-left: 22px;
+  padding-right: 22px;
+  min-width: 104px;
+  white-space: nowrap;
+  align-self: flex-end;
+}

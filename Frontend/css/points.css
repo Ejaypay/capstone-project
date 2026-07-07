@@ -1,0 +1,53 @@
+/* Points and wallet styles */
+.wallet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: center;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.wallet h2 {
+  font-size: clamp(3rem, 7vw, 5rem);
+}
+
+.wallet img {
+  max-height: 340px;
+  justify-self: center;
+}
+
+.track {
+  height: 16px;
+  margin: 18px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--yellow), var(--orange), var(--red));
+}
+
+.history-list {
+  display: grid;
+  gap: 16px;
+}
+
+.history-list article {
+  display: grid;
+  gap: 5px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.history-list b {
+  color: var(--orange);
+}

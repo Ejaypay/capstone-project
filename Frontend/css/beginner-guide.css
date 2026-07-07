@@ -1,0 +1,338 @@
+/* Beginner guide page styles */
+.guide-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.72fr);
+  gap: 34px;
+  align-items: center;
+  padding: 46px 0 18px;
+  text-align: left;
+}
+
+.guide-hero > div {
+  position: relative;
+  z-index: 1;
+}
+
+.guide-hero > div::before {
+  content: "";
+  position: absolute;
+  inset: -30px -96px -30px -28px;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 18% 48%, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0) 58%),
+    linear-gradient(90deg, rgba(3, 5, 9, 0.95), rgba(3, 5, 9, 0.78) 48%, rgba(3, 5, 9, 0.26) 72%, rgba(3, 5, 9, 0));
+  pointer-events: none;
+}
+
+.guide-hero h1 {
+  max-width: 860px;
+  font-size: clamp(2.7rem, 7vw, 5.8rem);
+  line-height: 0.92;
+  letter-spacing: -4px;
+  text-transform: uppercase;
+  color: white;
+}
+
+.guide-hero h1 span {
+  display: block;
+  background: linear-gradient(135deg, var(--yellow) 8%, #ff9b1a 42%, #ff4b1f 76%, #ff6a2a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 218, 128, 0.16);
+  filter: drop-shadow(0 0 12px rgba(255, 88, 31, 0.32));
+}
+
+.guide-hero p {
+  max-width: 760px;
+  color: #cbd5e1;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.guide-hero .primary-btn {
+  color: #111111;
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+}
+
+.guide-hero .ghost-btn {
+  color: white;
+  background: transparent;
+  border: 1px solid rgba(229, 231, 235, 0.78);
+}
+
+.guide-hero img {
+  width: min(100%, 430px);
+  justify-self: center;
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+}
+
+.guide-grade-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.guide-grade-card {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 18px;
+  min-height: 220px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.guide-grade-code {
+  min-height: 96px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255, 226, 106, 0.18), rgba(255, 122, 24, 0.14));
+  color: white;
+  font-size: 2.1rem;
+  font-weight: 1000;
+}
+
+.guide-grade-card p {
+  color: #cbd5e1;
+}
+
+.guide-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.guide-meta span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.guide-pick {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  margin: 40px 0 6px;
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.guide-pick p {
+  max-width: 760px;
+  color: #cbd5e1;
+}
+
+.guide-path {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.guide-path span {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 17px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.guide-path i {
+  width: 34px;
+  height: 2px;
+  background: var(--line);
+}
+
+.guide-step-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.guide-step-list article {
+  min-height: 180px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.guide-step-list span {
+  color: var(--yellow);
+  font-size: 0.78rem;
+  font-weight: 1000;
+}
+
+.guide-step-list p {
+  color: #cbd5e1;
+}
+
+.guide-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 42px;
+}
+
+.guide-tool-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.guide-tool-list div {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.guide-tool-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.guide-tool-list b {
+  color: white;
+}
+
+.guide-checklist {
+  display: grid;
+  gap: 13px;
+  margin-top: 18px;
+  padding-left: 18px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.guide-video-panel {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.guide-video-uploader {
+  display: grid;
+  gap: 18px;
+}
+
+.guide-video-form {
+  grid-template-columns: 1fr 1fr;
+}
+
+.guide-video-form .wide {
+  grid-column: 1 / -1;
+}
+
+.guide-video-lock {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.guide-video-gallery {
+  display: grid;
+  gap: 16px;
+}
+
+.guide-video-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.82fr) 1fr;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.guide-video-card video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: #05070b;
+  object-fit: cover;
+}
+
+.guide-video-card h3 {
+  margin-top: 8px;
+}
+
+.guide-video-card p {
+  color: #cbd5e1;
+}
+
+.guide-video-card small {
+  color: var(--muted);
+}
+
+.guide-video-delete {
+  margin-top: 14px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.wrap {
+  flex-wrap: wrap;
+  justify-content: start;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pill.red {
+  background: rgba(0, 0, 0, 0.16);
+  color: var(--red);
+}
+
+.pill.green {
+  background: rgba(255, 226, 106, 0.14);
+  color: var(--yellow);
+}
+
+.pill.yellow {
+  background: rgba(255, 122, 24, 0.14);
+  color: var(--orange);
+}
