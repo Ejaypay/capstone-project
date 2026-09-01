@@ -33,6 +33,7 @@
   const byId = (id) => document.getElementById(id);
   const roleLabels = {
     guest: "Guest",
+    admin: "Admin",
     buyer: "Buyer",
     seller: "Seller"
   };
@@ -102,7 +103,9 @@
   }
 
   function roleHome(role) {
-    return role === "seller" ? "seller-dashboard.html" : "discover.html";
+    if (role === "admin") return "admin-dashboard.html";
+    if (role === "seller") return "seller-dashboard.html";
+    return "discover.html";
   }
 
   function signOut() {
@@ -1745,7 +1748,7 @@
             ${activeAccount?.email ? `<small>${activeAccount.email}</small>` : `<small>No account signed in</small>`}
           </div>
           <div class="auth-actions">
-            <a class="ghost-btn" id="guestAccess" href="index.html">Continue as guest</a>
+            <a class="ghost-btn" id="guestAccess" href="index.html">Continue as Guest</a>
             ${activeAccount ? `<button class="ghost-btn" id="authLogout" type="button">Logout</button>` : ""}
           </div>
         </div>
@@ -1757,12 +1760,6 @@
           </div>
 
           <form class="auth-form" id="loginForm">
-            <label>Account type
-              <select id="loginRole" required>
-                <option value="buyer">Buyer</option>
-                <option value="seller">Seller</option>
-              </select>
-            </label>
             <label>Email<input required type="email" id="loginEmail" placeholder="builder@email.com"></label>
             <label>Password<input required type="password" id="loginPassword" placeholder="Password"></label>
             <button class="primary-btn">Login</button>
@@ -1827,8 +1824,8 @@
     byId("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
 
+      // Removed 'role' from payload since backend authenticates by email/password only
       const payload = {
-        role: byId("loginRole").value,
         email: byId("loginEmail").value,
         password: byId("loginPassword").value
       };
@@ -1843,11 +1840,12 @@
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          alert(responseMessage(data, "Invalid credentials. Check your account type, email, and password."));
+          alert(responseMessage(data, "Invalid credentials. Check your email and password."));
           return;
         }
 
-        const account = saveAuthenticatedAccount(data, payload);
+        // Pass data.user instead of payload so it uses the actual database role ('admin', 'seller', or 'buyer')
+        const account = saveAuthenticatedAccount(data, data.user);
         openModal(`<h2>${roleLabels[account.role]} login successful</h2><p>Your ${account.role} access is active.</p><a class="primary-btn" href="${roleHome(account.role)}">Continue</a>`);
       } catch (error) {
         console.error("Auth server error:", error);

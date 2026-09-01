@@ -2,7 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const ALLOWED_ROLES = ["buyer", "seller"];
+const ALLOWED_ROLES = ["buyer", "seller", "admin"];
 
 function sanitizeRole(role) {
  const normalized = String(role || "buyer").trim().toLowerCase();
@@ -30,7 +30,7 @@ function createToken(user) {
 
 exports.register = async(req,res)=>{
  try {
-   const {username,email,password,role,storeName,storeLocation} = req.body;
+   const {username,email,password,role,storeName,storeLocation,adminSecret} = req.body;
    const accountRole = sanitizeRole(role);
    const normalizedStoreName = String(storeName || "").trim();
    const normalizedStoreLocation = String(storeLocation || "").trim();
@@ -40,7 +40,13 @@ exports.register = async(req,res)=>{
    }
 
    if(!accountRole) {
-     return res.status(400).json({message:"Role must be buyer or seller"});
+     return res.status(400).json({message:"Role must be buyer, seller, or admin"});
+   }
+
+   if(accountRole === "admin") {
+     if(!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
+       return res.status(403).json({message:"Unauthorized to register as admin"});
+     }
    }
 
    if(accountRole === "seller" && (!normalizedStoreName || !normalizedStoreLocation)) {
@@ -75,39 +81,21 @@ exports.register = async(req,res)=>{
 
 exports.login = async(req,res)=>{
  try {
-   const {email,password,role}=req.body;
+   const {email, password} = req.body;
 
    if(!email || !password) {
      return res.status(400).json({message:"Email and password are required"});
    }
 
-   const requestedRole = role ? sanitizeRole(role) : null;
-
-   if(role && !requestedRole) {
-     return res.status(400).json({message:"Role must be buyer or seller"});
-   }
-
    const user = await User.findOne({email:String(email).trim().toLowerCase()}).select("+password");
-   if(!user) return res.status(400).json({message:"User not found"});
+   if(!user) return res.status(400).json({message:"Invalid email or password"});
 
-   const storedRole = sanitizeRole(user.role) || "buyer";
-   const shouldMigrateRole = user.role !== storedRole;
-
-   const match = await bcrypt.compare(password,user.password);
-   if(!match) return res.status(400).json({message:"Wrong password"});
-
-   if(requestedRole && requestedRole !== storedRole) {
-     return res.status(403).json({message:`This account is registered as ${storedRole}`});
-   }
-
-   if(shouldMigrateRole) {
-     user.role = storedRole;
-     await user.save();
-   }
+   const match = await bcrypt.compare(password, user.password);
+   if(!match) return res.status(400).json({message:"Invalid email or password"});
 
    const token = createToken(user);
 
-   res.json({token,user:publicUser(user)});
+   res.json({token, user:publicUser(user)});
  } catch (error) {
    res.status(500).json({message:"Login failed", error:error.message});
  }
